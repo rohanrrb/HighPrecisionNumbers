@@ -64,22 +64,22 @@ public class HPN {
 		
 		int intSum = a.intPart + b.intPart;
 		HPN sum = new HPN(intSum);
-		//which is the longer array 
-		int addition[][] = orderAdd(a.fracPart, b.fracPart);
+		//processing
+		int addition[][] = normalize(a.fracPart, b.fracPart);
+		
+		//print array
+//		for (int i = 0; i < addition.length; i++) {
+//            for (int j = 0; j < addition[i].length; j++)
+//                System.out.print(addition[i][j] + "");
+//            System.out.println();
+//        }
 		
 		//initialize array for fracPart
 		int[] fracSum = new int[addition[0].length]; 
-		//copy values from bigger array that will remain untouched to fracSum
-		int startAdd = addition[0].length -1 - addition[2][0];
-		if(addition[2][0] != 0) {
-			for(int i = addition[0].length -1; i>startAdd; i--) {
-				fracSum[i] = addition[0][i];
-			}
-		}
 		
 		//adding logic
 		int carry = 0;
-		for(int i = startAdd; i > 0; i--) {
+		for(int i = fracSum.length-1; i >= 1; i--) {
 			fracSum[i] = addition[0][i] + addition[1][i] + carry;
 			carry = 0;
 			
@@ -92,6 +92,7 @@ public class HPN {
 		}
 		
 		fracSum[0] = addition[0][0] + addition[1][0] + carry;
+		carry = 0;
 		
 		if(fracSum[0] >= 10) {
 			fracSum[0] = fracSum[0]%10;
@@ -102,6 +103,79 @@ public class HPN {
 		
 		return sum;
 	}
+
+	
+	public static int[][] normalize(int[] a, int[] b){
+		int[][] ordered = new int[2][];
+		int diff = 0;
+		
+		if(a.length != b.length) {
+			
+			if(a.length > b.length) {
+				diff = a.length - b.length;
+				int[] bNorm = new int[a.length];
+				
+				for(int i = 0; i < b.length; i++) {
+					bNorm[i] = b[i];
+				}
+				for(int j = b.length; j < bNorm.length; j++) {
+					bNorm[j] = 0;
+				}
+				
+				ordered[0] = a; 
+				ordered[1] = bNorm; 
+				return ordered;
+			}
+			
+			else {
+				diff = b.length - a.length;
+				int[] aNorm = new int[b.length];
+				
+				for(int i = 0; i < a.length; i++) {
+					aNorm[i] = a[i];
+				}
+				for(int j = a.length; j < aNorm.length; j++) {
+					aNorm[j] = 0;
+				}
+				
+				ordered[0] = aNorm; 
+				ordered[1] = b; 
+				return ordered;
+			}
+			
+			
+		}else {
+			ordered[0] = a; 
+			ordered[1] = b;
+			return ordered;
+		}
+		
+		
+		
+	}
+	
+	public static HPN subtract(HPN a, int b) {
+		printHPN(a);
+		System.out.println(b);
+		a.intPart -= b;
+		return a; 
+	}
+	
+	
+	/**
+	 * 
+	 * @param a
+	 */
+	public static void printHPN(HPN a) {
+		System.out.print(a.intPart + ".");
+		for(int v : a.fracPart) {
+			System.out.print(v);
+		}
+		System.out.println();
+//		System.out.println("Error: " + a.error);
+//		System.out.println();
+	}
+	
 	/**
 	 * 
 	 * @param a
@@ -126,35 +200,8 @@ public class HPN {
 			ordered[2][0] = a.length - b.length; 
 		}
 		
-		/*Print 2d Array
-		 * for (int i = 0; i < ordered.length; i++) { for (int j = 0; j <
-		 * ordered[i].length; j++) System.out.print(ordered[i][j] + " ");
-		 * System.out.println(); }
-		 */
-		 
-		
 		return ordered;
-	}
-	
-	public static HPN subtract(HPN a, int b) {
-		printHPN(a);
-		System.out.println(b);
-		a.intPart -= b;
-		return a; 
-	}
-	
-	/**
-	 * 
-	 * @param a
-	 */
-	public static void printHPN(HPN a) {
-		System.out.print(a.intPart + ".");
-		for(int v : a.fracPart) {
-			System.out.print(v);
-		}
-		System.out.println();
-	}
-	
+	}	
 
 	
 }
