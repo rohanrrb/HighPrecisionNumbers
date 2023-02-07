@@ -75,13 +75,6 @@ public class HPN {
 		//processing
 		int addition[][] = normalize(a.fracPart, b.fracPart);
 		
-		//print array
-//		for (int i = 0; i < addition.length; i++) {
-//            for (int j = 0; j < addition[i].length; j++)
-//                System.out.print(addition[i][j] + "");
-//            System.out.println();
-//        }
-		
 		//initialize array for fracPart
 		int[] fracSum = new int[addition[0].length]; 
 		
@@ -113,6 +106,51 @@ public class HPN {
 	}
 	
 	/**
+	 * Adds two int[] 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static int[] add(int[] a, int[] b) {
+
+		//processing
+		int addition[][] = normalize(a, b);
+		int[] sum = new int[addition[0].length];
+		//initialize array for fracPart 
+		
+		//adding logic
+		int carry = 0;
+		for(int i = sum.length-1; i >= 1; i--) {
+			sum[i] = addition[0][i] + addition[1][i] + carry;
+			carry = 0;
+			
+				if(sum[i] >= 10) {
+					sum[i] = sum[i]%10;
+					carry = 1;
+				}
+			
+			
+		}
+		
+		sum[0] = addition[0][0] + addition[1][0] + carry;
+		carry = 0;
+		
+		if(sum[0] >= 10) {
+			sum[0] = sum[0]%10;
+			carry = 1;
+			int[] newSum = new int[sum.length + 1];
+			newSum[0] = 0;
+			
+			for(int i = 1; i < newSum.length; i++) {
+				newSum[i] = sum[i];
+			}
+			newSum[0] += carry; 
+			return newSum; 
+		}
+		return sum;
+	}
+	
+	/**
 	 * Subtracts int from HPN
 	 * @param a
 	 * @param b
@@ -125,31 +163,14 @@ public class HPN {
 		return a; 
 	}
 	
-//	public static HPN subtract(HPN a, HPN b) {
-//		printHPN(a);
-//		printHPN(b);
-//		
-//		int[][] subtract = new int[2][0];
-//		subtract = normalize(a.fracPart, b.fracPart);
-//		int[] fracDiff = new int[subtract[0].length];
-//		HPN diff = new HPN(a.intPart-b.intPart);
-//		
-//		for(int i = subtract[0].length - 1 ;i >= 1; i--) {
-//			if(fracDiff[i] < 0) {
-//				fracDiff[i] = 10 + fracDiff[i];
-//			}
-//			
-//			fracDiff[i] = subtract[0][i] - subtract[1][i];
-//			if(fracDiff[i] < 0) {
-//				fracDiff[i] += 10;
-//				subtract[0][i -1] =- -1;
-//			}
-//		}
-//		
-//		diff.fracPart = fracDiff; 
-//		return diff;
-//	}
 	
+	/**
+	 * Uses Left to Right Subtraction 
+	 * @param a
+	 * @param b
+	 * @return difference beteen two HPNs
+	 * BUG: CANNOT CORRECTLY DISPLAY VALUES (-1,0)
+	 */
 	public static HPN subtract(HPN a, HPN b) {
 		printHPN(a);
 		printHPN(b);
@@ -180,8 +201,15 @@ public class HPN {
 			}
 		}
 		result.fracPart = resultFrac;
+		
+		if(result.intPart < 0) {
+			HPN neg = subtract(b, a);
+			printHPN(neg);
+			return neg;
+		}
 		return result;
 	}
+	
 	
 
 	
