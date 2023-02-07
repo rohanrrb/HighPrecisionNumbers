@@ -6,6 +6,7 @@ public class HPN {
 	private int[] fracPart; 
 	private int error; 
 	
+//Constructors	
 	//only int constructor
 	public HPN(int a) {
 		this.intPart = a;
@@ -45,6 +46,12 @@ public class HPN {
 		System.out.println();
 	}
 	
+	/**
+	 * Adds HPN and int
+	 * @param a
+	 * @param b
+	 * @return HPN sum
+	 */
 	public static HPN add(HPN a, int b) {
 		printHPN(a);
 		System.out.println(b);
@@ -52,8 +59,9 @@ public class HPN {
 		return a;
 	}
 	
+	
 	/**
-	 * 
+	 * Adds two HPNs
 	 * @param a
 	 * @param b
 	 * @return HPN sum
@@ -103,8 +111,86 @@ public class HPN {
 		
 		return sum;
 	}
+	
+	/**
+	 * Subtracts int from HPN
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static HPN subtract(HPN a, int b) {
+		printHPN(a);
+		System.out.println(b);
+		a.intPart -= b;
+		return a; 
+	}
+	
+//	public static HPN subtract(HPN a, HPN b) {
+//		printHPN(a);
+//		printHPN(b);
+//		
+//		int[][] subtract = new int[2][0];
+//		subtract = normalize(a.fracPart, b.fracPart);
+//		int[] fracDiff = new int[subtract[0].length];
+//		HPN diff = new HPN(a.intPart-b.intPart);
+//		
+//		for(int i = subtract[0].length - 1 ;i >= 1; i--) {
+//			if(fracDiff[i] < 0) {
+//				fracDiff[i] = 10 + fracDiff[i];
+//			}
+//			
+//			fracDiff[i] = subtract[0][i] - subtract[1][i];
+//			if(fracDiff[i] < 0) {
+//				fracDiff[i] += 10;
+//				subtract[0][i -1] =- -1;
+//			}
+//		}
+//		
+//		diff.fracPart = fracDiff; 
+//		return diff;
+//	}
+	
+	public static HPN subtract(HPN a, HPN b) {
+		printHPN(a);
+		printHPN(b);
+		HPN result = new HPN(a.intPart - b.intPart);
+		
+		int[][] subtract = new int[2][0];
+		subtract = normalize(a.fracPart, b.fracPart);
+		int[] resultFrac = new int[subtract[0].length];
+		
+		//use left to right algo
+		boolean[] tracker = new boolean[subtract[0].length];
+		
+		for(int i =0; i < subtract[0].length; i++) {
+			resultFrac[i] = subtract[0][i] - subtract[1][i];
+			
+			if(i == 0 && resultFrac[i] < 0) {
+				result.intPart--;
+				resultFrac[i] += 10; 
+			}
+			if(resultFrac[i] < 0) {
+				tracker[i-1] = true; 
+				resultFrac[i] += 10; 
+			}
+		}
+		for(int i = 0; i < subtract[0].length; i++) {
+			if(tracker[i]) {
+				resultFrac[i]--;
+			}
+		}
+		result.fracPart = resultFrac;
+		return result;
+	}
+	
 
 	
+	/**
+	 * Fill HPN frac Parts into 2d Array and fills "empty spaces" with zeros
+	 * @param a
+	 * @param b
+	 * @return 2d Array
+	 */
 	public static int[][] normalize(int[] a, int[] b){
 		int[][] ordered = new int[2][];
 		int diff = 0;
@@ -149,21 +235,11 @@ public class HPN {
 			ordered[1] = b;
 			return ordered;
 		}
-		
-		
-		
-	}
-	
-	public static HPN subtract(HPN a, int b) {
-		printHPN(a);
-		System.out.println(b);
-		a.intPart -= b;
-		return a; 
 	}
 	
 	
 	/**
-	 * 
+	 * Prints HPN int and frac part
 	 * @param a
 	 */
 	public static void printHPN(HPN a) {
