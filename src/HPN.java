@@ -1,10 +1,17 @@
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects; 
 
 public class HPN {
 	
 	private int intPart; 
 	private int[] fracPart; 
 	private int error; 
+	private boolean negative; //change to isNegative
+	
+	@Override
+	public String toString() {
+		return "HPN: " + intPart + "." + Arrays.toString(fracPart) + "Error= " + error;
+	}
 	
 //Constructors	
 	//only int constructor
@@ -12,6 +19,7 @@ public class HPN {
 		this.intPart = a;
 		this.fracPart = new int[0];
 		this.error = 0; 
+		this.negative = false; 
 	}
 	
 	//int with int[] constructor
@@ -19,11 +27,14 @@ public class HPN {
 		this.intPart = a;
 		this.fracPart = b;
 		this.error = 0;
+		this.negative = false; 
 	}
+	
 	
 	//String constructor
 	public HPN(String s) {
 		this.error = 0;
+		this.negative = false; 
 		
 		//split input
 		int decimalIndex = s.indexOf('.');
@@ -44,7 +55,10 @@ public class HPN {
 		System.out.println();
 		System.out.println("Error: " + this.error);
 		System.out.println();
+		
+		
 	}
+	
 	
 	/**
 	 * Adds HPN and int
@@ -87,9 +101,7 @@ public class HPN {
 				if(fracSum[i] >= 10) {
 					fracSum[i] = fracSum[i]%10;
 					carry = 1;
-				}
-			
-			
+				}	
 		}
 		
 		fracSum[0] = addition[0][0] + addition[1][0] + carry;
@@ -104,6 +116,7 @@ public class HPN {
 		
 		return sum;
 	}
+	
 	
 	/**
 	 * Adds two int[] 
@@ -128,8 +141,6 @@ public class HPN {
 					sum[i] = sum[i]%10;
 					carry = 1;
 				}
-			
-			
 		}
 		
 		sum[0] = addition[0][0] + addition[1][0] + carry;
@@ -155,8 +166,8 @@ public class HPN {
 	 * @param a
 	 * @param b
 	 * @return
-	 */
-	public static HPN subtract(HPN a, int b) {
+	 *///BUG: NEEDS TO RETURN A NEW HPN, EMPLOY A COPYHPN METHOD
+	public static HPN subtract(HPN a, int b) { 
 		printHPN(a);
 		System.out.println(b);
 		a.intPart -= b;
@@ -211,7 +222,30 @@ public class HPN {
 	}
 	
 	
+	public static HPN multiply(HPN a, int b) {
+		int intProduct = a.intPart * b; 
+		int[] fracProduct = new int[a.fracPart.length];
 
+		int temp = 0;
+
+		for (int i = fracProduct.length -1; i >= 0; i--) {
+			
+			 temp = a.fracPart[i]*b + temp; 
+			 String tempString = ""+ Integer.toString(temp);
+			 fracProduct[i] = Integer.parseInt(tempString.substring(tempString.length() -1));
+			 temp = Integer.parseInt(tempString.substring(0, tempString.length()-1));
+			 
+//			 System.out.println(fracProduct[i]);
+//			 System.out.println(temp);
+			 
+		}
+		intProduct += temp;
+		temp = 0;
+			
+		HPN product = new HPN(intProduct, fracProduct);
+		System.out.println(Objects.toString(product));
+		return product;
+	}
 	
 	/**
 	 * Fill HPN frac Parts into 2d Array and fills "empty spaces" with zeros
@@ -303,9 +337,6 @@ public class HPN {
 			ordered[1] = b;
 			ordered[2][0] = a.length - b.length; 
 		}
-		
 		return ordered;
-	}	
-
-	
+	}		
 }
