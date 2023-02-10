@@ -1,6 +1,20 @@
 import java.util.Arrays;
 import java.util.Objects; 
-
+/**
+ * 
+ * @author rohan
+ *TO DO LIST 2/9:
+ *
+ *execute isNegative for all methods
+ *	requires a check after each operation
+ *bug with multiply
+ *ERROR CALCULATION
+ *rewrite normalize description
+ *convert all printHPN to toString
+ *delete printHPN
+ *Review meeting notes add to list
+ *
+ */
 public class HPN {
 	
 	private int intPart; 
@@ -221,7 +235,13 @@ public class HPN {
 		return result;
 	}
 	
-	
+	/**
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 * Issue? Returns a 0 at the end for some cases ex) 20
+	 */
 	public static HPN multiply(HPN a, int b) {
 		int intProduct = a.intPart * b; 
 		int[] fracProduct = new int[a.fracPart.length];
