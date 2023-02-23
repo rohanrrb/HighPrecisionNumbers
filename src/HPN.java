@@ -1,14 +1,15 @@
 import java.util.Arrays;
-import java.util.Objects; 
+import java.util.Objects;
+
 /**
  * 
- * @author rohan
- *TO DO LIST 2/9:
+ * @author Rohan Bopardikar
+ * 
+ *TO DO LIST 2/23:
  *
- *All methods need to return a new HPN by default. maybe create an AddTo method for other cases. 
  *ERROR CALCULATION
  *rewrite normalize description
- *Review meeting notes add to list
+ *Input handling: Currently needs a decimal and a ones place (.234) throws error
  *
  */
 public class HPN {
