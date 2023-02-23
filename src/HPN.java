@@ -11,10 +11,11 @@ import java.util.Objects;
  *ERROR CALCULATION
  *rewrite normalize description
  *Input handling: Currently needs a decimal and a ones place (.234) throws error
- *
  *QUESTION: HANDLING SINGS -> OPERATIONS CHANGE THE SIGN OF THE INPUT(S) BUT ANSWER IS SIGNED CORRECNTLY
  *IS THIS FINE OR NEED WORKAROUND???????????
- *
+ *division error 	
+ *check for extra zeros in multiplication
+ *add bool isTruncated and change toString accordingly **
  */
 public class HPN {
 	
@@ -26,9 +27,9 @@ public class HPN {
 	@Override
 	public String toString() {
 		if(negative) {
-			return "HPN: -" + intPart + "." + Arrays.toString(fracPart) + " Error(" + error +")";
+			return "HPN: -" + intPart + "." + Arrays.toString(fracPart) + "(+/- " + error +")";
 		}else {
-			return "HPN: " + intPart + "." + Arrays.toString(fracPart) + " Error(" + error +")";
+			return "HPN: " + intPart + "." + Arrays.toString(fracPart) + "(+/- " + error +")";
 		}
 	}
 	
@@ -58,6 +59,34 @@ public class HPN {
 	//String constructor
 	public HPN(String s) {
 		this.error = 0;
+		this.negative = false; 
+		
+		//split input
+		int decimalIndex = s.indexOf('.');
+		String intPart = s.substring(0, decimalIndex);
+		String fracPart = s.substring(decimalIndex + 1);
+		
+		int fracLength = fracPart.length(); 
+		
+		this.intPart = Integer.parseInt(intPart);
+		this.fracPart = new int[fracLength];
+
+		//fills fracPart into array
+		for(int i = 0; i < fracLength; i++) {
+			this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
+		}
+		if(s.charAt(0) == '-') {
+			this.negative = true;
+			s = s.substring(1);
+			this.intPart *= -1;
+		}
+
+		
+		checkNegative(this);
+		
+	}
+	public HPN(String s, int error) {
+		this.error = error;
 		this.negative = false; 
 		
 		//split input
@@ -313,8 +342,12 @@ public class HPN {
 	 * @param b
 	 * @return
 	 * NEEDS SOME MORE CASE TESTING...
+	 * BREAKS OF REPEATING DECIMLAS AT 10 WITH i
+	 * how should error work for this? clarify with dr. Heckman
 	 */
 	public static HPN divide(HPN a, int b) {
+		System.out.println(a.toString() + " / " + b);
+		
 		if(a.negative && b < 0) {
 			a.negative = false;
 			b *= -1; 
@@ -339,7 +372,6 @@ public class HPN {
 		int whole = 0; 
 		int intQuotient;
 		
-		System.out.println(a.toString() + " / " + b);
 		int dividend; 
 		intQuotient = a.intPart/b;
 		int intRemainder = a.intPart % b; 
@@ -367,25 +399,21 @@ public class HPN {
 			qFrac[0] = miniQ; 
 			int product = miniQ * b; 
 			dividend = dividend - product;
-			System.out.println("NOW: " + qFrac[0]);
-			System.out.println("div1: " + dividend);
 			
 			int i = 1;
-			while(dividend != 0 || i != rFrac.length) {
-				System.out.println("loop");
+			while((dividend != 0 || i != rFrac.length) && i < 10) {
 				if(i > rFrac.length -1){
 					rFrac = expand(rFrac);
 				}
 				dividend = concat(dividend, rFrac[i]);
-				System.out.println("div: " + dividend);
 				
 				miniQ = dividend/b;
-				System.out.println("Q: " + miniQ);
 				
 				if(i > qFrac.length -1) {
 					qFrac = expand(qFrac);
 				}
 				qFrac[i] = miniQ;
+				System.out.print(miniQ);
 				
 				product = miniQ *b;
 				dividend = dividend - product; 
@@ -395,8 +423,35 @@ public class HPN {
 			quotient.fracPart = qFrac;
 
 		return quotient;
-			
-
+	}
+	
+	public static int HPNHPNerror(HPN a, HPN b) {
+		int error = 0; 
+		int aLength = a.fracPart.length;
+		int bLength = b.fracPart.length;
+		double placeDiff;
+		int firstError;
+		int secondError;
+		
+		if(aLength == bLength) {
+			return a.error + b.error;
+		}
+		else if(aLength > bLength){
+			placeDiff = aLength - bLength;
+			firstError = (int)(a.error * java.lang.Math.pow(10,placeDiff));
+			secondError = b.error;
+		}
+		else {
+			placeDiff = bLength - aLength;
+			firstError = (int)(b.error * java.lang.Math.pow(10,placeDiff));
+			secondError = a.error;
+		}
+		
+		return firstError + secondError;
+	}
+	
+	public static int HPNinterror(HPN a, int b, boolean isDivide) {
+		
 	}
 	
 	public static int concat(int a, int b) {
