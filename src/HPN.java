@@ -7,9 +7,13 @@ import java.util.Objects;
  * 
  *TO DO LIST 2/23:
  *
+ *THROUGHOUT DOCUMENTED CASE TEST OF ALL OPERATIONS
  *ERROR CALCULATION
  *rewrite normalize description
  *Input handling: Currently needs a decimal and a ones place (.234) throws error
+ *
+ *QUESTION: HANDLING SINGS -> OPERATIONS CHANGE THE SIGN OF THE INPUT(S) BUT ANSWER IS SIGNED CORRECNTLY
+ *IS THIS FINE OR NEED WORKAROUND???????????
  *
  */
 public class HPN {
@@ -126,9 +130,6 @@ public class HPN {
 			sum.negative = true; 
 			return sum; 
 		}
-		
-
-		
 		
 		//processing
 		int addition[][] = normalize(a.fracPart, b.fracPart);
@@ -306,6 +307,117 @@ public class HPN {
 		return product;
 	}
 	
+	/**
+	 * Divides HPN by int
+	 * @param a
+	 * @param b
+	 * @return
+	 * NEEDS SOME MORE CASE TESTING...
+	 */
+	public static HPN divide(HPN a, int b) {
+		if(a.negative && b < 0) {
+			a.negative = false;
+			b *= -1; 
+			
+			return divide(a,b);
+		}
+		
+		if(!a.negative && b < 0) {
+			b *= -1;
+			HPN result = divide(a,b);
+			result.negative = true;
+			return result;
+		}
+		if(a.negative && b > 0) {
+			a.negative = false;
+			HPN result = divide(a,b);
+			result.negative = true;
+			return result;
+		}
+		
+		
+		int whole = 0; 
+		int intQuotient;
+		
+		System.out.println(a.toString() + " / " + b);
+		int dividend; 
+		intQuotient = a.intPart/b;
+		int intRemainder = a.intPart % b; 
+		
+		if (intQuotient != 0) {
+			
+			whole = intQuotient*b; 
+			a.intPart -= whole; 
+			HPN quotient = divide(a, b);
+			quotient.intPart += intQuotient; 
+			System.out.println("+" + intQuotient);
+			return quotient; 
+
+		}
+		
+		HPN remainder = new HPN(intRemainder, a.fracPart); 
+		int[] rFrac = remainder.fracPart; 
+		int[] qFrac = new int[rFrac.length]; 
+		HPN quotient = new HPN(0, qFrac);
+		
+		
+			
+			dividend = concat(remainder.intPart, rFrac[0]);
+			int miniQ = dividend/b;
+			qFrac[0] = miniQ; 
+			int product = miniQ * b; 
+			dividend = dividend - product;
+			System.out.println("NOW: " + qFrac[0]);
+			System.out.println("div1: " + dividend);
+			
+			int i = 1;
+			while(dividend != 0 || i != rFrac.length) {
+				System.out.println("loop");
+				if(i > rFrac.length -1){
+					rFrac = expand(rFrac);
+				}
+				dividend = concat(dividend, rFrac[i]);
+				System.out.println("div: " + dividend);
+				
+				miniQ = dividend/b;
+				System.out.println("Q: " + miniQ);
+				
+				if(i > qFrac.length -1) {
+					qFrac = expand(qFrac);
+				}
+				qFrac[i] = miniQ;
+				
+				product = miniQ *b;
+				dividend = dividend - product; 
+				
+				i++;
+			}
+			quotient.fracPart = qFrac;
+
+		return quotient;
+			
+
+	}
+	
+	public static int concat(int a, int b) {
+		String s1 = Integer.toString(a);
+        String s2 = Integer.toString(b);
+        String s = s1 + s2;
+        int c = Integer.parseInt(s);
+        
+        return c;
+	}
+	
+	public static int[] expand(int[] a) {
+		int[] b = new int[a.length + 1];
+		for(int i = 0; i < a.length; i++) {
+			b[i] = a[i]; 
+		}
+		
+		b[b.length -1] = 0; 
+		return b;  
+	}
+	
 
 	/**
 	 * Fill HPN frac Parts into 2d Array and fills "empty spaces" with zeros
@@ -364,37 +476,8 @@ public class HPN {
 			a.negative = true; 
 			a.intPart *= -1; 
 		}
-		
 	}
 	
-//	public static boolean isAdd(HPN a, HPN b) {
-//		String aNeg, bNeg; 
-//		if(a.negative) {
-//			aNeg = "neg"; 
-//		}
-//		else {
-//			aNeg = "pos"; 
-//		}
-//		
-//		if(b.negative) {
-//			bNeg = "neg"; 
-//		}
-//		else {
-//			bNeg = "pos"; 
-//		}
-//		
-//		switch(aNeg+bNeg) {
-//		case "pospos":
-//			return true; 
-//			break; 
-//		case "posneg
-//			
-//		}
-//
-//
-//		
-//	}
-
 	/**
 	 * Adds two int[] 
 	 * @param a
@@ -436,31 +519,5 @@ public class HPN {
 			return newSum; 
 		}
 		return sum;
-	}
-	
-	/**
-	 * 
-	 * @param a
-	 * @param b
-	 * @return jagged array:
-	 * 0: larger array
-	 * 1: smaller array
-	 * 2: length difference
-	 */
-	public static int[][] orderAdd(int[] a, int[] b){
-		int[][] ordered = new int[3][];
-		ordered[2] = new int[1]; 
-		
-		if( b.length > a.length) {
-			ordered[0] = b; 
-			ordered[1] = a;
-			ordered[2][0] = b.length - a.length; 
-		}
-		else {
-			ordered[0] = a; 
-			ordered[1] = b;
-			ordered[2][0] = a.length - b.length; 
-		}
-		return ordered;
 	}		
 }
