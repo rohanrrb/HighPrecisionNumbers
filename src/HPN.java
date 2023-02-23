@@ -256,6 +256,27 @@ public class HPN {
 	 * Issue? Returns a 0 at the end for some cases ex) 20
 	 */
 	public static HPN multiply(HPN a, int b) {
+		System.out.println(a.toString() + " * " + b);
+		
+		if(a.negative && b > 0) {
+			a.negative = false;
+			HPN result = multiply(a,b); 
+			result.negative = true;
+			return result;
+		}
+		
+		if (!a.negative && b<0) {
+			b *= -1;
+			HPN result = multiply(a,b); 
+			result.negative = true;
+			return result;
+		}
+		
+		if(a.negative && b < 0) {
+			a.negative = false; 
+			b *= -1; 
+			return multiply(a,b);
+		}
 		int intProduct = a.intPart * b; 
 		int[] fracProduct = new int[a.fracPart.length];
 
@@ -264,18 +285,24 @@ public class HPN {
 		for (int i = fracProduct.length -1; i >= 0; i--) {
 			
 			 temp = a.fracPart[i]*b + temp; 
-			 String tempString = ""+ Integer.toString(temp);
-			 fracProduct[i] = Integer.parseInt(tempString.substring(tempString.length() -1));
-			 temp = Integer.parseInt(tempString.substring(0, tempString.length()-1));
+			 if(temp > 9) {//new
+				 String tempString = ""+ Integer.toString(temp);
+				 fracProduct[i] = Integer.parseInt(tempString.substring(tempString.length() -1));
+				 temp = Integer.parseInt(tempString.substring(0, tempString.length()-1));
+				 if(i == 0) {
+					 intProduct += temp;
+				 }
+			 }else {
+				 fracProduct[i] = temp;
+				 temp = 0;
+			 }
+			 
 		 
 		}
-		intProduct += temp;
-		temp = 0;
-			
-		HPN product = new HPN(intProduct, fracProduct);
-		System.out.println(Objects.toString(product));
 		
-		checkNegative(product);
+		
+			
+		HPN product = new HPN(intProduct, fracProduct);		
 		return product;
 	}
 	
