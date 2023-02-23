@@ -7,15 +7,19 @@ import java.util.Objects;
  * 
  *TO DO LIST 2/23:
  *
- *THROUGHOUT DOCUMENTED CASE TEST OF ALL OPERATIONS
- *ERROR CALCULATION
+ *ERROR CALCULATION for * and /
  *rewrite normalize description
+ *THOROUGH DOCUMENTED CASE TEST OF ALL OPERATIONS
+	 *check for extra zeros in multiplication
  *Input handling: Currently needs a decimal and a ones place (.234) throws error
- *QUESTION: HANDLING SINGS -> OPERATIONS CHANGE THE SIGN OF THE INPUT(S) BUT ANSWER IS SIGNED CORRECNTLY
+ *
+ *Questions:
+ *HOW liberal should we be with error? moving stuff around for signs gets +1 error? or no
+ *Structure of numCalc? Calling it in the main method is awkward..
+ *HANDLING SIGNSS -> OPERATIONS CHANGE THE SIGN OF THE INPUT(S) BUT ANSWER IS SIGNED CORRECNTLY
  *IS THIS FINE OR NEED WORKAROUND???????????
- *division error 	
- *check for extra zeros in multiplication
- *add bool isTruncated and change toString accordingly **
+ *division error due to non-terminating
+ *
  */
 public class HPN {
 	
@@ -23,13 +27,21 @@ public class HPN {
 	private int[] fracPart; 
 	private int error; 
 	private boolean negative; //change to isNegative
+	private static int numCalculations = 0; 
+	private boolean errorIsTruncated;
 	
 	@Override
 	public String toString() {
 		if(negative) {
-			return "HPN: -" + intPart + "." + Arrays.toString(fracPart) + "(+/- " + error +")";
+			if(errorIsTruncated) {
+				return "HPN: -" + intPart + "." + Arrays.toString(fracPart) + "(" + error +"*)";
+			}
+			return "HPN: -" + intPart + "." + Arrays.toString(fracPart) + "(" + error +")";
 		}else {
-			return "HPN: " + intPart + "." + Arrays.toString(fracPart) + "(+/- " + error +")";
+			if(errorIsTruncated) {
+				return "HPN: " + intPart + "." + Arrays.toString(fracPart) + "(" + error +"*)";
+			}
+			return "HPN: " + intPart + "." + Arrays.toString(fracPart) + "(" + error +")";
 		}
 	}
 	
@@ -40,7 +52,15 @@ public class HPN {
 		this.fracPart = new int[0];
 		this.error = 0; 
 		this.negative = false; 
+		checkNegative(this);
 		
+	}
+	
+	public HPN(int a, int error) {
+		this.intPart = a;
+		this.fracPart = new int[0];
+		this.error = error; 
+		this.negative = false; 
 		checkNegative(this);
 		
 	}
@@ -51,7 +71,6 @@ public class HPN {
 		this.fracPart = b;
 		this.error = 0;
 		this.negative = false; 
-		
 		checkNegative(this);
 	}
 	
@@ -60,7 +79,6 @@ public class HPN {
 	public HPN(String s) {
 		this.error = 0;
 		this.negative = false; 
-		
 		//split input
 		int decimalIndex = s.indexOf('.');
 		String intPart = s.substring(0, decimalIndex);
@@ -88,7 +106,6 @@ public class HPN {
 	public HPN(String s, int error) {
 		this.error = error;
 		this.negative = false; 
-		
 		//split input
 		int decimalIndex = s.indexOf('.');
 		String intPart = s.substring(0, decimalIndex);
@@ -122,10 +139,11 @@ public class HPN {
 	 * @return HPN sum
 	 */
 	public static HPN add(HPN a, int b) {
-		System.out.print(a.toString() + " + b= ");
+		System.out.println(a.toString() + " + " + b);
 		HPN sum = new HPN(a.intPart + b); 
 		sum.fracPart = a.fracPart;
 		
+		sum.error = a.error + 1;
 		return sum;
 	}
 	
@@ -137,6 +155,7 @@ public class HPN {
 	 * @return HPN sum
 	 */
 	public static HPN add(HPN a, HPN b) {
+		numCalculations++;
 		int intSum = a.intPart + b.intPart;
 		HPN sum = new HPN(intSum);
 		
@@ -189,6 +208,11 @@ public class HPN {
 		sum.fracPart = fracSum;
 		//checkNegative(sum);
 		
+		sum.error = ( HPNHPNerror(a,b)).getErrorVal() + numCalculations;		
+		if(HPNHPNerror(a,b).isTruncated()) {
+			sum.errorIsTruncated = true;
+		}
+		System.out.println("NUM: " + numCalculations);
 		return sum;
 	}
 
@@ -212,6 +236,7 @@ public class HPN {
 	 * @return difference between two HPNs
 	 */
 	public static HPN subtract(HPN a, HPN b) {
+		numCalculations++;
 		System.out.println(a.toString() + " - " + b.toString());
 
 		if (a.negative && !b.negative) {
@@ -266,7 +291,6 @@ public class HPN {
 		}
 		
 		if(result.intPart < 0 || result.negative) {
-			System.out.print("switchSWITCH");
 			HPN neg = subtract(b, a);
 			neg.negative = true; 
 			return neg;
@@ -275,6 +299,12 @@ public class HPN {
 		result.fracPart = resultFrac;
 		
 		//checkNegative(result);
+		System.out.println("NUM: " + numCalculations);
+		
+		result.error = HPNHPNerror(a,b).getErrorVal() + numCalculations;
+		if(HPNHPNerror(a,b).isTruncated()) {
+			result.errorIsTruncated = true;
+		}
 		return result;
 	}
 	
@@ -342,7 +372,7 @@ public class HPN {
 	 * @param b
 	 * @return
 	 * NEEDS SOME MORE CASE TESTING...
-	 * BREAKS OF REPEATING DECIMLAS AT 10 WITH i
+	 * BREAKS OFF REPEATING DECIMALS AT 10 WITH i
 	 * how should error work for this? clarify with dr. Heckman
 	 */
 	public static HPN divide(HPN a, int b) {
@@ -413,7 +443,6 @@ public class HPN {
 					qFrac = expand(qFrac);
 				}
 				qFrac[i] = miniQ;
-				System.out.print(miniQ);
 				
 				product = miniQ *b;
 				dividend = dividend - product; 
@@ -425,34 +454,51 @@ public class HPN {
 		return quotient;
 	}
 	
-	public static int HPNHPNerror(HPN a, HPN b) {
-		int error = 0; 
+	public static errorArray HPNHPNerror(HPN a, HPN b) {
+		int error = 0;
+		boolean isTruncated = false; 
+		
 		int aLength = a.fracPart.length;
 		int bLength = b.fracPart.length;
+
 		double placeDiff;
-		int firstError;
-		int secondError;
+		int firstError = 0;
+		int secondError = 0;
 		
 		if(aLength == bLength) {
-			return a.error + b.error;
+			error = a.error + b.error;
+
 		}
 		else if(aLength > bLength){
 			placeDiff = aLength - bLength;
+			if(placeDiff > 9) {
+				placeDiff = 9;
+				isTruncated = true;
+			}
 			firstError = (int)(a.error * java.lang.Math.pow(10,placeDiff));
 			secondError = b.error;
+			error = firstError + secondError;
 		}
 		else {
 			placeDiff = bLength - aLength;
-			firstError = (int)(b.error * java.lang.Math.pow(10,placeDiff));
+			if(placeDiff > 9) {
+				placeDiff = 9;
+				isTruncated = true;
+				
+			}
+
+			firstError = (b.error * (int)java.lang.Math.pow(10,placeDiff));
 			secondError = a.error;
+			error = firstError + secondError;
 		}
 		
-		return firstError + secondError;
+		errorArray Error = new errorArray(error, isTruncated);
+		return Error;
 	}
 	
-	public static int HPNinterror(HPN a, int b, boolean isDivide) {
-		
-	}
+//	public static int HPNinterror(HPN a, int b, boolean isDivide) {
+//		
+//	}
 	
 	public static int concat(int a, int b) {
 		String s1 = Integer.toString(a);
@@ -574,5 +620,9 @@ public class HPN {
 			return newSum; 
 		}
 		return sum;
-	}		
+	}
+	
+	public static void resetNumCalculations() {
+		numCalculations = 0;
+	}
 }
