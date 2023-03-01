@@ -496,9 +496,6 @@ public class HPN {
 		return Error;
 	}
 	
-//	public static int HPNinterror(HPN a, int b, boolean isDivide) {
-//		
-//	}
 	
 	public static int concat(int a, int b) {
 		String s1 = Integer.toString(a);
