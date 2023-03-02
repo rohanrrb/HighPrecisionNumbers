@@ -7,8 +7,7 @@ import java.util.Objects;
  * 
  *TO DO LIST 3/1:
  *
- *Subtraction doesn't work: 1.998 - 0.999
- *
+ *Error for Division & Multiplication
  *Instead of all the if statements for sign:
  *			-copy() method to copy it over
  *			-negate() formula to simply change the sign
@@ -167,21 +166,14 @@ public class HPN {
 		System.out.println(a.toString() + " + " + b.toString());
 		
 		if(a.negative && !b.negative) {
-			a.negative = false; 
-			return subtract(b, a);
+			return subtract(b, negate(copy(a)));
 		}
 		
 		if(!a.negative && b.negative) {
-			b.negative = false; 
-			return subtract(a,b);
+			return subtract(a, negate(copy(b)));
 		}
 		if(a.negative && b.negative) {
-			a.negative = false; 
-			b.negative = false;
-			
-			sum = add(a, b);
-			sum.negative = true; 
-			return sum; 
+			return negate(add(negate(copy(a)),negate(copy(b))));
 		}
 		
 		//processing
@@ -211,10 +203,10 @@ public class HPN {
 		}
 		sum.intPart += carry;
 		sum.fracPart = fracSum;
-		//checkNegative(sum);
+		//(sum);
 		
-		sum.error = ( HPNHPNerror(a,b)).getErrorVal() + numCalculations;		
-		if(HPNHPNerror(a,b).isTruncated()) {
+		sum.error = ( HPNHPNerror(a,b, "add")).getErrorVal() + numCalculations;		
+		if(HPNHPNerror(a,b, "add").isTruncated()) {
 			sum.errorIsTruncated = true;
 		}
 		System.out.println("NUM: " + numCalculations);
@@ -234,86 +226,6 @@ public class HPN {
 	}
 	
 	
-	/**
-	 * Uses Left to Right Subtraction 
-	 * @param a
-	 * @param b
-	 * @return difference between two HPNs
-	 */
-//	public static HPN subtract(HPN a, HPN b) {
-//		numCalculations++;
-//		System.out.println(a.toString() + " - " + b.toString());
-//		HPN result = new HPN(a.intPart - b.intPart);
-//
-//		if (a.negative && !b.negative) {
-//			b.negative = true; 
-//			return add(a, b);
-//		}
-//		if(b.negative) {
-//			b.negative = false; 
-//			return add(a,b); 
-//		}
-//		
-//		
-//
-//		
-//		if(result.intPart < 0 || result.negative) {
-//			HPN neg = subtract(b, a);
-//			neg.negative = true; 
-//			return neg;
-//		}
-//
-//		
-//		int[][] subtract = new int[2][0];
-//		subtract = normalize(a.fracPart, b.fracPart);
-//		int[] resultFrac = new int[subtract[0].length];
-//		
-//		//use left to right algo
-//		boolean[] tracker = new boolean[subtract[0].length];
-//		
-//		for(int i =0; i < subtract[0].length; i++) {
-//			resultFrac[i] = subtract[0][i] - subtract[1][i];
-//			
-//			if(i == 0 && resultFrac[i] < 0) {
-//				if(result.negative) {
-//					result.intPart++;
-//				}
-//				else{
-//					result.intPart--;
-//				}
-//				resultFrac[i] += 10; 
-//			}
-//			if(resultFrac[i] < 0) {
-//				tracker[i-1] = true; 
-//				resultFrac[i] += 10; 
-//			}
-//		}
-//		for(int i = 0; i < subtract[0].length; i++) {
-//			if(tracker[i]) {
-//				
-//				resultFrac[i]--;
-//			}
-//			
-//		}
-//		
-//		if(result.intPart < 0 || result.negative) {
-//			HPN neg = subtract(b, a);
-//			neg.negative = true; 
-//			return neg;
-//		}
-//		
-//		result.fracPart = resultFrac;
-//		
-//		//checkNegative(result);
-//		System.out.println("NUM: " + numCalculations);
-//		
-//		result.error = HPNHPNerror(a,b).getErrorVal() + numCalculations;
-//		if(HPNHPNerror(a,b).isTruncated()) {
-//			result.errorIsTruncated = true;
-//		}
-//		return result;
-//	}
-	
 	public static HPN subtract(HPN a, HPN b) {
 		numCalculations++;
 		System.out.println(a.toString() + " - " + b.toString());
@@ -324,11 +236,7 @@ public class HPN {
 		int[] resultFrac = new int[subtract[0].length];
 		
 		for(int i = subtract[0].length - 1; i > 0; i--) {
-			if(subtract[0][i] == 0) {
-				System.out.println("wi");
-				subtract[0][i] = 10;
-				subtract[0][i-1]--;
-			}
+
 			if(subtract[0][i] == -1) {
 				subtract[0][i] = 9;
 				subtract[0][i-1]--;
@@ -337,31 +245,35 @@ public class HPN {
 				subtract[0][i-1]--;
 				subtract[0][i] = concat(1,subtract[0][i]);
 			}
-			
-		
 				resultFrac[i] = subtract[0][i] - subtract[1][i];
-			
 		}
-		
-		if(subtract[0][0] == 0) {
-			result.intPart--;
-			subtract[0][0] = 9;
-		}
-		
+
 		if(subtract[0][0] < 0) {
 			subtract[0][0] = 9;
-			result.intPart--;
+			a.intPart--;
 		}
 		
 		if(subtract[0][0] < subtract[1][0]) {
-			result.intPart--;
-
+			a.intPart--;
 			subtract[0][0] = concat(1,subtract[0][0]);
 		}
 		
 		resultFrac[0] = subtract[0][0] - subtract[1][0];
-		
 		result.fracPart = resultFrac;
+		result.intPart = a.intPart - b.intPart; 
+		
+		checkNegative(result);
+		
+		if(result.negative) {
+			return(negate(subtract(b,a))); 
+		}
+		
+		result.error = ( HPNHPNerror(a,b, "sub")).getErrorVal() + numCalculations;		
+		if(HPNHPNerror(a,b, "add").isTruncated()) {
+			result.errorIsTruncated = true;
+		}
+		System.out.println("NUM: " + numCalculations);
+		
 		return result;
 	}
 	
@@ -488,7 +400,7 @@ public class HPN {
 			dividend = dividend - product;
 			
 			int i = 1;
-			while((dividend != 0 || i != rFrac.length) && i < 10) {
+			while((dividend != 0 || i != rFrac.length) && i < a.fracPart.length) {
 				if(i > rFrac.length -1){
 					rFrac = expand(rFrac);
 				}
@@ -511,7 +423,7 @@ public class HPN {
 		return quotient;
 	}
 	
-	public static errorArray HPNHPNerror(HPN a, HPN b) {
+	public static errorArray HPNHPNerror(HPN a, HPN b, String operation) {
 		int error = 0;
 		boolean isTruncated = false; 
 		
@@ -633,18 +545,23 @@ public class HPN {
 		}
 	}
 	
-	public static void negate(HPN a) {
+	public static HPN negate(HPN a) {
 		if(a.negative) {
 			a.negative = false;
 		}
 		else {
 			a.negative = true;
 		}
+		
+		return a;
 	}
 	
 	public static HPN copy(HPN a) {
 		HPN b = new HPN(a.intPart);
 		b.fracPart = a.fracPart;
+		b.negative = a.negative;
+		b.error = a.error;
+		b.errorIsTruncated = a.errorIsTruncated;
 		return b; 
 	}
 	
