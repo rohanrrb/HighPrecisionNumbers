@@ -5,20 +5,25 @@ import java.util.Objects;
  * 
  * @author Rohan Bopardikar
  * 
- *TO DO LIST 2/23:
+ *TO DO LIST 3/1:
  *
- *ERROR CALCULATION for * and /
- *rewrite normalize description
- *THOROUGH DOCUMENTED CASE TEST OF ALL OPERATIONS
-	 *check for extra zeros in multiplication
- *Input handling: Currently needs a decimal and a ones place (.234) throws error
+ *Subtraction doesn't work: 1.998 - 0.999
  *
- *Questions:
- *HOW liberal should we be with error? moving stuff around for signs gets +1 error? or no
- *Structure of numCalc? Calling it in the main method is awkward..
- *HANDLING SIGNSS -> OPERATIONS CHANGE THE SIGN OF THE INPUT(S) BUT ANSWER IS SIGNED CORRECNTLY
- *IS THIS FINE OR NEED WORKAROUND???????????
- *division error due to non-terminating
+ *Instead of all the if statements for sign:
+ *			-copy() method to copy it over
+ *			-negate() formula to simply change the sign
+ *			-needed so 
+ *				-code simplicity
+ *				-does not change signs of original HPN
+ *Multiplication Extra Zeros
+ *Error handling for division
+ *			-at what decimal val should non-terminating be rounded
+ *			-add +1 at the very end, takes care of the rounding thing
+ *Output format: +#.###±## or -#.###±###*
+ *More efficient way to toString (there's a different structure: (x) ? (y)...\
+ *Current sign handling for division is to complicated
+ *Constructor when no decimal present
+ *Make an add(HPN, int)?
  *
  */
 public class HPN {
@@ -238,24 +243,25 @@ public class HPN {
 	public static HPN subtract(HPN a, HPN b) {
 		numCalculations++;
 		System.out.println(a.toString() + " - " + b.toString());
-
-		if (a.negative && !b.negative) {
-			b.negative = true; 
-			return add(a, b);
-		}
-		if(b.negative) {
-			b.negative = false; 
-			return add(a,b); 
-		}
-		
 		HPN result = new HPN(a.intPart - b.intPart);
 
-		
-		if(result.intPart < 0 || result.negative) {
-			HPN neg = subtract(b, a);
-			neg.negative = true; 
-			return neg;
-		}
+//		if (a.negative && !b.negative) {
+//			b.negative = true; 
+//			return add(a, b);
+//		}
+//		if(b.negative) {
+//			b.negative = false; 
+//			return add(a,b); 
+//		}
+//		
+//		
+//
+//		
+//		if(result.intPart < 0 || result.negative) {
+//			HPN neg = subtract(b, a);
+//			neg.negative = true; 
+//			return neg;
+//		}
 
 		
 		int[][] subtract = new int[2][0];
@@ -304,6 +310,30 @@ public class HPN {
 		result.error = HPNHPNerror(a,b).getErrorVal() + numCalculations;
 		if(HPNHPNerror(a,b).isTruncated()) {
 			result.errorIsTruncated = true;
+		}
+		return result;
+	}
+	
+	public static HPN subtract(HPN a, HPN b) {
+		HPN result = new HPN(a.intPart - b.intPart);
+		int[][] subtract = normalize(a.fracPart,b.fracPart);
+		int[] resultFrac = new int[subtract[0].length];
+		for(int i = 1; i < subtract[0].length; i++) {
+			if(subtract[0][i] == 0) {
+				subtract[0][i] = 10;
+				subtract[0][i-1]--;
+			}
+			if(subtract[0][i] < subtract[1][i]) {
+				subtract[0][i-1]--;
+				subtract[0][i] = concat(1,subtract[0][i]);
+			}
+			
+			resultFrac[i] = subtract[0][i] - subtract[1][i];
+		}
+		
+		if(subtract[0][0] == 0) {
+			result.intPart--;
+			
 		}
 		return result;
 	}
