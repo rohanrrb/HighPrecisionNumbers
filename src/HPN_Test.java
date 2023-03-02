@@ -5,11 +5,11 @@ public class HPN_Test {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		HPN x = new HPN("1.998", 1);
-		HPN y = new HPN("0.999", 1);
+		HPN x = new HPN("1.2", 1);
+		HPN y = new HPN("1.9", 1);
 		
 		
-		HPN result = HPN.subtract(x, y);
+		HPN result = HPN.copy(x);
 		HPN.resetNumCalculations();
 		
 		System.out.println("---------------");

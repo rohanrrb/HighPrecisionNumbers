@@ -319,11 +319,18 @@ public class HPN {
 		System.out.println(a.toString() + " - " + b.toString());
 		
 		HPN result = new HPN(a.intPart - b.intPart);
+		
 		int[][] subtract = normalize(a.fracPart,b.fracPart);
 		int[] resultFrac = new int[subtract[0].length];
-		for(int i = 1; i < subtract[0].length; i++) {
+		
+		for(int i = subtract[0].length - 1; i > 0; i--) {
 			if(subtract[0][i] == 0) {
+				System.out.println("wi");
 				subtract[0][i] = 10;
+				subtract[0][i-1]--;
+			}
+			if(subtract[0][i] == -1) {
+				subtract[0][i] = 9;
 				subtract[0][i-1]--;
 			}
 			if(subtract[0][i] < subtract[1][i]) {
@@ -331,13 +338,27 @@ public class HPN {
 				subtract[0][i] = concat(1,subtract[0][i]);
 			}
 			
-			resultFrac[i] = subtract[0][i] - subtract[1][i];
+		
+				resultFrac[i] = subtract[0][i] - subtract[1][i];
+			
 		}
 		
 		if(subtract[0][0] == 0) {
 			result.intPart--;
 			subtract[0][0] = 9;
 		}
+		
+		if(subtract[0][0] < 0) {
+			subtract[0][0] = 9;
+			result.intPart--;
+		}
+		
+		if(subtract[0][0] < subtract[1][0]) {
+			result.intPart--;
+
+			subtract[0][0] = concat(1,subtract[0][0]);
+		}
+		
 		resultFrac[0] = subtract[0][0] - subtract[1][0];
 		
 		result.fracPart = resultFrac;
@@ -610,6 +631,21 @@ public class HPN {
 			a.negative = true; 
 			a.intPart *= -1; 
 		}
+	}
+	
+	public static void negate(HPN a) {
+		if(a.negative) {
+			a.negative = false;
+		}
+		else {
+			a.negative = true;
+		}
+	}
+	
+	public static HPN copy(HPN a) {
+		HPN b = new HPN(a.intPart);
+		b.fracPart = a.fracPart;
+		return b; 
 	}
 	
 	/**
