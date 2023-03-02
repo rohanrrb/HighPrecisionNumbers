@@ -240,11 +240,11 @@ public class HPN {
 	 * @param b
 	 * @return difference between two HPNs
 	 */
-	public static HPN subtract(HPN a, HPN b) {
-		numCalculations++;
-		System.out.println(a.toString() + " - " + b.toString());
-		HPN result = new HPN(a.intPart - b.intPart);
-
+//	public static HPN subtract(HPN a, HPN b) {
+//		numCalculations++;
+//		System.out.println(a.toString() + " - " + b.toString());
+//		HPN result = new HPN(a.intPart - b.intPart);
+//
 //		if (a.negative && !b.negative) {
 //			b.negative = true; 
 //			return add(a, b);
@@ -262,59 +262,62 @@ public class HPN {
 //			neg.negative = true; 
 //			return neg;
 //		}
-
-		
-		int[][] subtract = new int[2][0];
-		subtract = normalize(a.fracPart, b.fracPart);
-		int[] resultFrac = new int[subtract[0].length];
-		
-		//use left to right algo
-		boolean[] tracker = new boolean[subtract[0].length];
-		
-		for(int i =0; i < subtract[0].length; i++) {
-			resultFrac[i] = subtract[0][i] - subtract[1][i];
-			
-			if(i == 0 && resultFrac[i] < 0) {
-				if(result.negative) {
-					result.intPart++;
-				}
-				else{
-					result.intPart--;
-				}
-				resultFrac[i] += 10; 
-			}
-			if(resultFrac[i] < 0) {
-				tracker[i-1] = true; 
-				resultFrac[i] += 10; 
-			}
-		}
-		for(int i = 0; i < subtract[0].length; i++) {
-			if(tracker[i]) {
-				
-				resultFrac[i]--;
-			}
-			
-		}
-		
-		if(result.intPart < 0 || result.negative) {
-			HPN neg = subtract(b, a);
-			neg.negative = true; 
-			return neg;
-		}
-		
-		result.fracPart = resultFrac;
-		
-		//checkNegative(result);
-		System.out.println("NUM: " + numCalculations);
-		
-		result.error = HPNHPNerror(a,b).getErrorVal() + numCalculations;
-		if(HPNHPNerror(a,b).isTruncated()) {
-			result.errorIsTruncated = true;
-		}
-		return result;
-	}
+//
+//		
+//		int[][] subtract = new int[2][0];
+//		subtract = normalize(a.fracPart, b.fracPart);
+//		int[] resultFrac = new int[subtract[0].length];
+//		
+//		//use left to right algo
+//		boolean[] tracker = new boolean[subtract[0].length];
+//		
+//		for(int i =0; i < subtract[0].length; i++) {
+//			resultFrac[i] = subtract[0][i] - subtract[1][i];
+//			
+//			if(i == 0 && resultFrac[i] < 0) {
+//				if(result.negative) {
+//					result.intPart++;
+//				}
+//				else{
+//					result.intPart--;
+//				}
+//				resultFrac[i] += 10; 
+//			}
+//			if(resultFrac[i] < 0) {
+//				tracker[i-1] = true; 
+//				resultFrac[i] += 10; 
+//			}
+//		}
+//		for(int i = 0; i < subtract[0].length; i++) {
+//			if(tracker[i]) {
+//				
+//				resultFrac[i]--;
+//			}
+//			
+//		}
+//		
+//		if(result.intPart < 0 || result.negative) {
+//			HPN neg = subtract(b, a);
+//			neg.negative = true; 
+//			return neg;
+//		}
+//		
+//		result.fracPart = resultFrac;
+//		
+//		//checkNegative(result);
+//		System.out.println("NUM: " + numCalculations);
+//		
+//		result.error = HPNHPNerror(a,b).getErrorVal() + numCalculations;
+//		if(HPNHPNerror(a,b).isTruncated()) {
+//			result.errorIsTruncated = true;
+//		}
+//		return result;
+//	}
 	
 	public static HPN subtract(HPN a, HPN b) {
+		numCalculations++;
+		System.out.println(a.toString() + " - " + b.toString());
+		
 		HPN result = new HPN(a.intPart - b.intPart);
 		int[][] subtract = normalize(a.fracPart,b.fracPart);
 		int[] resultFrac = new int[subtract[0].length];
@@ -333,8 +336,11 @@ public class HPN {
 		
 		if(subtract[0][0] == 0) {
 			result.intPart--;
-			
+			subtract[0][0] = 9;
 		}
+		resultFrac[0] = subtract[0][0] - subtract[1][0];
+		
+		result.fracPart = resultFrac;
 		return result;
 	}
 	
