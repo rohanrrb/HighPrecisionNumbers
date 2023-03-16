@@ -5,26 +5,17 @@ import java.util.Objects;
  * HIGH PRECISION NUMBER PROJECT (HPN)
  * @author Rohan Bopardikar
  * 
- *TO DO LIST 3/1:
+ *TO DO LIST 3/16:
  *
- *Error for Division & Multiplication
- *Instead of all the if statements for sign:
- *			-copy() method to copy it over
- *			-negate() formula to simply change the sign
- *			-needed so 
- *				-code simplicity
- *				-does not change signs of original HPN
- *Multiplication Extra Zeros
- *Error handling for division
- *			-at what decimal value should non-terminating be rounded
- *			-add +1 at the very end, takes care of the rounding thing
- *Output format: +#.###±## or -#.###±###*
+
  *More efficient way to toString (there's a different structure: (x) ? (y)...\
  *Current sign handling for division is to complicated
- *Constructor when no decimal present
+ *Constructor when no decimal present 
  *
- *Arbitrary +1 error only for division. 
- *
+ *Questions:
+ *". When truncating an exact HPN, the answer will be exact iff (if and
+only if) all digits removed are 0s"
+	If HPN a is inExact and only zeros are removed, it is to stay inExact right?
  */
 public class HPN {
 	
@@ -36,6 +27,7 @@ public class HPN {
 	
 	private boolean isExact; 
 	private int precision; 
+
 	
 	private static errorData errorData;
 	
@@ -72,7 +64,7 @@ public class HPN {
 	//only int constructor
 	public HPN(int a) {
 		this.intPart = a;
-		this.fracPart = new int[0];
+		this.fracPart = new int[]{0};
 		this.error = 0; 
 		this.isNegative = false; 
 		checkNegative(this);
@@ -194,7 +186,7 @@ public class HPN {
 	
 	
 	
-	static final HPN zero = new HPN(0);
+	static final HPN zero = new HPN("0.000");
 	
 	
 	/**
@@ -272,16 +264,18 @@ public class HPN {
 		//(sum);
 		
 		sum.error = ( errorData.addError(a,b, "add")).getErrorVal()  ;		
-		if(errorData.addError(a,b, "add").isTruncated()) {
-			sum.isTruncated = true;
-		}
+//		if(errorData.addError(a,b, "add").isTruncated()) {
+//			sum.isTruncated = true;
+//		}
 		
 		if(!a.isExact || !b.isExact) {
 			sum.isExact = false;
 		}
 		
+
 		sum.precision = calculatePrecision(a,b);
-		applyPrecision(sum);
+
+		truncate(sum,a.fracPart.length - a.precision);
 		return sum;
 	}
 
@@ -409,22 +403,15 @@ public class HPN {
 		return product;
 	}
 	
-	/**
-	 * Divides HPN by int
-	 * @param a
-	 * @param b
-	 * @return
-	 * NEEDS SOME MORE CASE TESTING...
-	 * BREAKS OFF REPEATING DECIMALS AT 10 WITH i
-	 * how should error work for this? clarify with Dr. Heckman
-	 */
+	
 	public static HPN divide(HPN a, int b) {
 		System.out.println(a.toString() + " / " + b);
-		int error = a.error + 1;
-		
+		boolean exact = true;
+
 		if(a.isNegative && b < 0) {
 			a.isNegative = false;
 			b *= -1; 
+			
 			return divide(a,b);
 		}
 		
@@ -444,7 +431,7 @@ public class HPN {
 		
 		int whole = 0; 
 		int intQuotient;
-		
+
 		int dividend; 
 		intQuotient = a.intPart/b;
 		int intRemainder = a.intPart % b; 
@@ -456,10 +443,7 @@ public class HPN {
 			HPN quotient = divide(a, b);
 			quotient.intPart += intQuotient; 
 			System.out.println("+" + intQuotient);
-			
-			
 			return quotient; 
-
 		}
 		
 		HPN remainder = new HPN(intRemainder, a.fracPart); 
@@ -474,30 +458,37 @@ public class HPN {
 			qFrac[0] = miniQ; 
 			int product = miniQ * b; 
 			dividend = dividend - product;
-			
+
 			int i = 1;
-			while((dividend != 0 || i != rFrac.length) && i < a.fracPart.length) {
+			while((dividend != 0 || i != rFrac.length) && i < 10) {
 				if(i > rFrac.length -1){
 					rFrac = expand(rFrac);
 				}
 				dividend = concat(dividend, rFrac[i]);
-				
+
 				miniQ = dividend/b;
-				
+
 				if(i > qFrac.length -1) {
 					qFrac = expand(qFrac);
 				}
 				qFrac[i] = miniQ;
 				
+
 				product = miniQ *b;
 				dividend = dividend - product; 
 				
+				if(i == 9) {
+					exact = false;
+				}
 				i++;
 			}
-		quotient.fracPart = qFrac;
-		quotient.error = error;
+			quotient.fracPart = qFrac;
+			
+		quotient.isExact = exact;
+		updatePrecision(quotient);
 		return quotient;
 	}
+
 	
 
 	
@@ -672,8 +663,18 @@ public class HPN {
 		}
 	}
 	
-	public static void applyPrecision(HPN a) {
-		if(a.precision < a.fracPart.length) {
+	public static void truncate(HPN a, int diff) {
+
+		if(diff!=0) {
+
+			if(a.isExact) {
+				for(int i = a.fracPart.length-1; i >= a.fracPart.length-diff; i--) {
+					if(a.fracPart[i] != 0) {
+						System.out.println("chopping off non-zeros");
+						a.isExact = false;
+					}
+				}
+			}
 			int[] replacement = new int[a.precision];
 			
 			for(int i = 0; i < replacement.length; i++) {
@@ -685,6 +686,70 @@ public class HPN {
 		}
 	}
 	
+	public static void applyPrecision(HPN a) {
+
+		int diff = a.fracPart.length - a.precision ;
+
+		if(diff!=0) {
+			System.out.println("enter");
+			if(a.isExact) {
+				for(int i = a.fracPart.length; i >= a.fracPart.length-diff; i--) {
+					if(a.fracPart[i] != 0) {
+						System.out.println("chopping off non-zeros");
+						a.isExact = false;
+					}
+				}
+			}
+			int[] replacement = new int[a.precision];
+			
+			for(int i = 0; i < replacement.length; i++) {
+				replacement[i] = a.fracPart[i]; 
+			}
+			
+			a.fracPart = replacement; 
+			if(a.isExact == false) {
+				a.isTruncated = true;
+			}
+		}
+	}
+	
+	public static HPN geometricSum(int a, int b) {
+		 // 1 + (a/b) + (a/b)^2 + ...
+//		check for convergence
+		if (a > b) {
+			System.out.println("diverges");
+		}else {
+			System.out.println("converges");
+		}
+        HPN sum = copy(zero);
+        HPN term = new HPN(1);
+//        do
+//            sum = sum + term
+//            term = term * a / b // watch this space, it will change
+//when calculating other constants
+//        until term = 0
+        
+//        }
+        while(isZero(term) == false) {
+        	sum = add(sum, term);
+        	term = multiply(term, a/b);
+        }
+        return sum;
+	}
+	
+	
+	private static boolean isZero(HPN term) {
+		if(term.intPart != 0) {
+			return false;
+		}
+		for(int i = 0; i < term.fracPart.length; i++) {
+			if(term.fracPart[i] != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	//Getters & Setters
 	public int getInt() {
 		return this.intPart;
