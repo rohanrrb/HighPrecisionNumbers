@@ -21,7 +21,6 @@ public class HPN {
 	
 	private int intPart; 
 	private int[] fracPart; 
-	private int error; 
 	private boolean isNegative; //change to isNegative
 	private boolean isTruncated;
 	
@@ -29,7 +28,6 @@ public class HPN {
 	private int precision; 
 
 	
-	private static errorData errorData;
 	
 	@Override
 	public String toString() {
@@ -65,7 +63,6 @@ public class HPN {
 	public HPN(int a) {
 		this.intPart = a;
 		this.fracPart = new int[]{0};
-		this.error = 0; 
 		this.isNegative = false; 
 		checkNegative(this);
 		this.isExact = true; 
@@ -77,7 +74,6 @@ public class HPN {
 	public HPN(int a, int[] b) {
 		this.intPart = a;
 		this.fracPart = b;
-		this.error = 0;
 		this.isNegative = false; 
 		checkNegative(this);
 		this.isExact = true; 
@@ -87,14 +83,16 @@ public class HPN {
 	
 	//String constructor
 	public HPN(String s) {
-		this.error = 0;
 		this.isNegative = false; 
 		//split input
 		int decimalIndex = s.indexOf('.');
 		if(decimalIndex != 0) {
 			String intPart = s.substring(0, decimalIndex);
 			this.intPart = Integer.parseInt(intPart);
-		}else {
+		}else if(decimalIndex < 0) {
+			this.intPart = Integer.parseInt(s);
+		}
+		else {
 			intPart = 0;
 		}
 		String fracPart = s.substring(decimalIndex + 1);
@@ -119,37 +117,9 @@ public class HPN {
 		this.isExact = true;
 	}
 	
-	public HPN(String s, int error) {
-		this.error = error;
-		this.isNegative = false; 
-		//split input
-		int decimalIndex = s.indexOf('.');
-		String intPart = s.substring(0, decimalIndex);
-		String fracPart = s.substring(decimalIndex + 1);
-		
-		int fracLength = fracPart.length(); 
-		
-		this.intPart = Integer.parseInt(intPart);
-		this.fracPart = new int[fracLength];
 
-		//fills fracPart into array
-		for(int i = 0; i < fracLength; i++) {
-			this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
-		}
-		if(s.charAt(0) == '-') {
-			this.isNegative = true;
-			s = s.substring(1);
-			this.intPart *= -1;
-		}
-
-		checkNegative(this);
-		this.precision = this.fracPart.length; 
-		this.isExact = true; 
-		
-	}
 	
 	public HPN(String s, boolean isExact) {
-		this.error = 0;
 		this.isNegative = false; 
 		//split input
 		int decimalIndex = s.indexOf('.');
@@ -158,10 +128,13 @@ public class HPN {
 		
 		int fracLength = fracPart.length(); 
 		
-		if(decimalIndex != 0) {
+		if(decimalIndex < 0) {
 			String intPart = s.substring(0, decimalIndex);
 			this.intPart = Integer.parseInt(intPart);
-		}else {
+		}else if(decimalIndex < 0) {
+			this.intPart = Integer.parseInt(s);
+		}
+		else {
 			intPart = 0;
 		}
 		
@@ -186,7 +159,7 @@ public class HPN {
 	
 	
 	
-	static final HPN zero = new HPN("0.000");
+	static final HPN zero = new HPN("0.0");
 	
 	
 	/**
@@ -261,12 +234,6 @@ public class HPN {
 		}
 		sum.intPart += carry;
 		sum.fracPart = fracSum;
-		//(sum);
-		
-		sum.error = ( errorData.addError(a,b, "add")).getErrorVal()  ;		
-//		if(errorData.addError(a,b, "add").isTruncated()) {
-//			sum.isTruncated = true;
-//		}
 		
 		if(!a.isExact || !b.isExact) {
 			sum.isExact = false;
@@ -333,11 +300,6 @@ public class HPN {
 			return(negate(subtract(b,a))); 
 		}
 		
-		result.error = ( errorData.addError(a,b, "sub")).getErrorVal();		
-		if(errorData.addError(a,b, "add").isTruncated()) {
-			result.isTruncated = true;
-		}
-		
 		result.precision = calculatePrecision(a,b);
 		return result;
 	}
@@ -352,7 +314,6 @@ public class HPN {
 	 */
 	public static HPN multiply(HPN a, int b) {
 		System.out.println(a.toString() + " * " + b);
-		int error = a.error;
 		
 		if(a.isNegative && b > 0) {
 			a.isNegative = false;
@@ -395,11 +356,9 @@ public class HPN {
 		}
 
 		HPN product = new HPN(intProduct, fracProduct);	
-		product.error = error;
 		if(b == 0) {
 			return zero;
 		}
-		product.error = error * b;
 		return product;
 	}
 	
@@ -589,7 +548,6 @@ public class HPN {
 		b.isExact = a.isExact;
 		b.fracPart = a.fracPart;
 		b.isNegative = a.isNegative;
-		b.error = a.error;
 		b.isTruncated = a.isTruncated;
 		updatePrecision(a);
 		return b; 
@@ -714,29 +672,42 @@ public class HPN {
 	}
 	
 	public static HPN geometricSum(int a, int b) {
+		String series = "";
 		 // 1 + (a/b) + (a/b)^2 + ...
 //		check for convergence
-		if (a > b) {
-			System.out.println("diverges");
+		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
+			return null;
 		}else {
 			System.out.println("converges");
 		}
         HPN sum = copy(zero);
         HPN term = new HPN(1);
-//        do
-//            sum = sum + term
-//            term = term * a / b // watch this space, it will change
-//when calculating other constants
-//        until term = 0
-        
-//        }
+
         while(isZero(term) == false) {
+        	series += term + ", "; 
+        	System.out.println(Objects.toString("sum: " +sum));
         	sum = add(sum, term);
-        	term = multiply(term, a/b);
+        	term = multiply(term, a);
+        	term = divide(term, b);
+        	
         }
+        System.out.println(series);
         return sum;
 	}
 	
+	public static int factorial(int a) {
+		int product = 1; 
+		if( a < 1) {
+			return 1; 
+		}else {
+			for(int i = a; i > 0; i--) {
+				System.out.println(i);
+				product *= i;
+			}
+			
+			return product;
+		}
+	}
 	
 	private static boolean isZero(HPN term) {
 		if(term.intPart != 0) {
@@ -763,28 +734,13 @@ public class HPN {
 	public void setFracPart(int[] fracPart) {
 		this.fracPart = fracPart;
 	}
-	public int getError() {
-		return this.error;
-	}
-	public void setError(int error) {
-		this.error = error;
-	}
+
 	public boolean getIsNegative() {
 		return this.isNegative;
 	}
 	public void setIsNegative(boolean isNegative) {
 		this.isNegative = isNegative;
 	}
-	public boolean getErrorIsTruncated() {
-		return this.isTruncated;
-	}
-	public void setErrorIsTruncated(boolean isTruncated) {
-		this.isTruncated = isTruncated;
-	}
-	public errorData getErrorData() {
-		return this.errorData;
-	}
-	public void setErrorData(errorData errorData) {
-		this.errorData = errorData;
-	}
+
+
 }
