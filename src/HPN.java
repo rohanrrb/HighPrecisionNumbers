@@ -5,7 +5,7 @@ import java.util.Objects;
  * HIGH PRECISION NUMBER PROJECT (HPN)
  * @author Rohan Bopardikar
  * 
- *TO DO LIST 3/16:
+ *TO DO LIST 3/25:
  *
 
  *More efficient way to toString (there's a different structure: (x) ? (y)...\
@@ -241,7 +241,8 @@ public class HPN {
 		
 
 		sum.precision = calculatePrecision(a,b);
-
+		
+		//,how many digits have been cut off
 		truncate(sum,a.fracPart.length - a.precision);
 		return sum;
 	}
@@ -694,6 +695,10 @@ public class HPN {
         System.out.println(series);
         return sum;
 	}
+	
+	//return e
+	
+	
 	
 	public static int factorial(int a) {
 		int product = 1; 
