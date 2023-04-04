@@ -165,8 +165,13 @@ public class HPN {
 	}
 	
 	
-	
-	static final HPN zero = new HPN("0.0");
+	public final HPN zero() {
+		return new HPN("0.0", true);
+	}
+	public final HPN one() {
+		return new HPN("1.0", true);
+	}
+
 	
 	
 	/**
