@@ -254,63 +254,7 @@ public class HPN {
 		return sum;
 	}
 
-	
-	/**
-	 * Subtracts int from HPN
-	 * @param a
-	 * @param b -> new HPN
-	 * @return
-	 */
-//	public static HPN subtract(HPN a, int b) { 
-//		HPN B = new HPN(b); 
-//		return subtract(a,B);
-//	}
-//	
-//	
-//	public static HPN subtract(HPN a, HPN b) {
-//		System.out.println(a.toString() + " - " + b.toString());
-//		
-//		HPN result = new HPN(a.intPart - b.intPart);
-//		
-//		int[][] subtract = padZeros(a.fracPart,b.fracPart);
-//		int[] resultFrac = new int[subtract[0].length];
-//		
-//		for(int i = subtract[0].length - 1; i > 0; i--) {
-//
-//			if(subtract[0][i] == -1) {
-//				subtract[0][i] = 9;
-//				subtract[0][i-1]--;
-//			}
-//			if(subtract[0][i] < subtract[1][i]) {
-//				subtract[0][i-1]--;
-//				subtract[0][i] = concat(1,subtract[0][i]);
-//			}
-//				resultFrac[i] = subtract[0][i] - subtract[1][i];
-//		}
-//
-//		if(subtract[0][0] < 0) {
-//			subtract[0][0] = 9;
-//			a.intPart--;
-//		}
-//		
-//		if(subtract[0][0] < subtract[1][0]) {
-//			a.intPart--;
-//			subtract[0][0] = concat(1,subtract[0][0]);
-//		}
-//		
-//		resultFrac[0] = subtract[0][0] - subtract[1][0];
-//		result.fracPart = resultFrac;
-//		result.intPart = a.intPart - b.intPart; 
-//		
-//		checkNegative(result);
-//		
-//		if(result.isNegative) {
-//			return(negate(subtract(b,a))); 
-//		}
-//		
-//		result.precision = calculatePrecision(a,b);
-//		return result;
-//	}
+
 	
 	public static HPN subtract(HPN a,HPN b) {
 		System.out.println(a.toString() + " - " + b.toString());
@@ -640,48 +584,7 @@ public class HPN {
 		return b; 
 	}
 	
-	/**
-	 * Adds two int[] 
-	 * @param a
-	 * @param b
-	 * @return
-	 */
-	public static int[] add(int[] a, int[] b) {
 
-		//processing
-		int addition[][] = padZeros(a, b);
-		int[] sum = new int[addition[0].length];
-		//initialize array for fracPart 
-		
-		//adding logic
-		int carry = 0;
-		for(int i = sum.length-1; i >= 1; i--) {
-			sum[i] = addition[0][i] + addition[1][i] + carry;
-			carry = 0;
-			
-				if(sum[i] >= 10) {
-					sum[i] = sum[i]%10;
-					carry = 1;
-				}
-		}
-		
-		sum[0] = addition[0][0] + addition[1][0] + carry;
-		carry = 0;
-		
-		if(sum[0] >= 10) {
-			sum[0] = sum[0]%10;
-			carry = 1;
-			int[] newSum = new int[sum.length + 1];
-			newSum[0] = 0;
-			
-			for(int i = 1; i < newSum.length; i++) {
-				newSum[i] = sum[i];
-			}
-			newSum[0] += carry; 
-			return newSum; 
-		}
-		return sum;
-	}
 	
 	public static void updatePrecision(HPN a) {
 		a.precision = a.fracPart.length; 
