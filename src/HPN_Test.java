@@ -8,7 +8,7 @@ public class HPN_Test {
 		HPN x = new HPN("2.8999", false);
 		HPN y = new HPN("3.0", false);
 		
-		HPN result = HPN.add(x,2);
+		HPN result = HPN.e();
 		
 		System.out.println("---------------");
 		//System.out.println(Objects.toString(x));

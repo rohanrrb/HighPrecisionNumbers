@@ -46,14 +46,14 @@ public class HPN {
 		
 		if(isNegative) {
 			if(isTruncated) {
-				return "-" + intPart + "." + fracNum + "(" + exact  +")" + "("+this.fracPart.length+")*";
+				return "-" + intPart + "." + fracNum + "(" + exact  +")" /*+ "("+this.fracPart.length+")*"*/;
 			}
-			return "-" + intPart + "." + fracNum + "(" + exact +")" + "("+this.fracPart.length+")";
+			return "-" + intPart + "." + fracNum + "(" + exact +")" /*+ "("+this.fracPart.length+")"*/;
 		}else {
 			if(isTruncated) {
-				return  intPart + "." + fracNum + "(" + exact +")" + "("+this.fracPart.length+")*";
+				return  intPart + "." + fracNum + "(" + exact +")" /* + "("+this.fracPart.length+")*"*/;
 			}
-			return  intPart + "." + fracNum + "(" + exact +")" + "("+this.fracPart.length+")";
+			return  intPart + "." + fracNum + "(" + exact +")" /* + "("+this.fracPart.length+")"*/;
 		}
 	}
 	
@@ -221,19 +221,9 @@ public class HPN {
 	 * @param b
 	 * @return HPN sum
 	 */
-	public static HPN add(HPN a, int b) {
-//		System.out.println(a.toString() + " + " + b);
-//		HPN sum = new HPN(a.intPart + b); 
-//		sum.fracPart = a.fracPart;
-//		checkNegative(sum);
-//		if(!a.isExact) {
-//			sum.isExact = false;
-//		}
-//		return sum;
-		
+	public static HPN add(HPN a, int b) {	
 		return add(a, new HPN(b));
 	}
-	
 	public static HPN add(int a, HPN b) {
 		return add(b,a);
 	}
@@ -807,7 +797,8 @@ public class HPN {
 	
 	
 	public static HPN geometricSum(int a, int b) {
-		String series = "";
+		String sequence = "";
+		String sums = "";
 		 // 1 + (a/b) + (a/b)^2 + ...
 //		check for convergence
 		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
@@ -816,21 +807,52 @@ public class HPN {
 			System.out.println("converges");
 		}
         HPN sum = zero();
-        HPN term = new HPN(1);
+        HPN term = one();
 
-        while(isZero(term) == false) {
-        	series += term + ", "; 
-        	System.out.println(Objects.toString("sum: " +sum));
+        while(!isZero(term)) {
+        	sequence += term + ", "; 
+        	//System.out.println(Objects.toString("sum: " +sum));
+            System.out.println("---");
+        	sums += sum + ", ";
         	sum = add(sum, term);
         	term = multiply(term, a);
         	term = divide(term, b);
         	
         }
-        System.out.println(series);
+        System.out.println("---------------");
+        System.out.println("Sequence: " + sequence);
+        System.out.println("Partial Sums: " + sums);
         return sum;
 	}
 	
 	//return e
+	public static HPN e() {
+		return eToX(1);
+	}
+	public static HPN eToX(int x) {
+		String sequence = "";
+		String sums = "";
+		
+		HPN sum = zero();
+		HPN term = one();
+		int n = 0;
+		
+		while(!isZero(term)) {
+        	sequence += term + ", "; 
+        	System.out.println(Objects.toString("sum: " +sum));
+        	sums += sum + ", ";
+        	sum = add(sum, term);
+        	term = multiply(term, x);
+        	if(sum != one()) {
+        		term = divide(term, n+1);
+        	}
+        	n++;
+        }
+		System.out.println("---------------");
+        System.out.println("Sequence: " + sequence);
+        System.out.println("Partial Sums: " + sums);
+        return sum;
+	}
 	
 	
 	
