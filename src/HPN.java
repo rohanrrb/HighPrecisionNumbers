@@ -25,7 +25,7 @@ public class HPN {
 	private boolean isTruncated;
 	
 	private boolean isExact; 
-	private int precision; 
+//	private int precision; 
 
 	
 	
@@ -47,14 +47,14 @@ public class HPN {
 		
 		if(isNegative) {
 			if(isTruncated) {
-				return "-" + intPart + "." + fracNum + "(" + exact  +")" + "("+precision+")*";
+				return "-" + intPart + "." + fracNum + "(" + exact  +")" + "("+this.fracPart.length+")*";
 			}
-			return "-" + intPart + "." + fracNum + "(" + exact +")" + "("+precision+")";
+			return "-" + intPart + "." + fracNum + "(" + exact +")" + "("+this.fracPart.length+")";
 		}else {
 			if(isTruncated) {
-				return  intPart + "." + fracNum + "(" + exact +")" + "("+precision+")*";
+				return  intPart + "." + fracNum + "(" + exact +")" + "("+this.fracPart.length+")*";
 			}
-			return  intPart + "." + fracNum + "(" + exact +")" + "("+precision+")";
+			return  intPart + "." + fracNum + "(" + exact +")" + "("+this.fracPart.length+")";
 		}
 	}
 	
@@ -66,7 +66,7 @@ public class HPN {
 		this.isNegative = false; 
 		checkNegative(this);
 		this.isExact = true; 
-		this.precision = 0; 
+	
 		
 	}
 	
@@ -77,7 +77,7 @@ public class HPN {
 		this.isNegative = false; 
 		checkNegative(this);
 		this.isExact = true; 
-		this.precision = b.length; 
+
 	}
 	
 	
@@ -117,7 +117,7 @@ public class HPN {
 		}
 
 		checkNegative(this);
-		this.precision = this.fracPart.length;
+
 		this.isExact = true;
 	}
 	
@@ -158,7 +158,7 @@ public class HPN {
 		}
 
 		checkNegative(this);
-		this.precision = this.fracPart.length;
+		
 		this.isExact = true;
 		this.isExact = isExact; 
 		
@@ -247,10 +247,10 @@ public class HPN {
 		}
 		
 
-		sum.precision = calculatePrecision(a,b);
+		
 		
 		//,how many digits have been cut off
-		truncate(sum,a.fracPart.length - a.precision);
+//		truncate(sum,a.fracPart.length - a.fracPart.length);
 		return sum;
 	}
 
@@ -475,7 +475,7 @@ public class HPN {
 			quotient.fracPart = qFrac;
 			
 		quotient.isExact = exact;
-		updatePrecision(quotient);
+
 		return quotient;
 	}
 
@@ -580,85 +580,105 @@ public class HPN {
 		b.fracPart = a.fracPart;
 		b.isNegative = a.isNegative;
 		b.isTruncated = a.isTruncated;
-		updatePrecision(a);
 		return b; 
 	}
 	
 
+
+//	
+//	public static int calculatePrecision(HPN a, HPN b) {
+//		int aP = a.precision;
+//		int bP = b.precision;
+//		
+//		if(a.isExact || b.isExact) {
+//			//max
+//			if(aP > bP) {
+//				return aP;
+//			}else {
+//				return bP;
+//			}
+//		}else {
+//			//min
+//			if(aP > bP) {
+//				return bP;
+//			}else {
+//				return aP;
+//			}
+//		}
+//	}
 	
-	public static void updatePrecision(HPN a) {
-		a.precision = a.fracPart.length; 
-	}
-	
-	public static int calculatePrecision(HPN a, HPN b) {
-		int aP = a.precision;
-		int bP = b.precision;
+
+
+	private static int findPrecision(HPN a, HPN b) {
+		int aLength = a.fracPart.length;
+		int bLength = b.fracPart.length;
+		int diff = aLength - bLength;
 		
-		if(a.isExact || b.isExact) {
-			//max
-			if(aP > bP) {
-				return aP;
-			}else {
-				return bP;
+		//if the same length, no truncation needed
+		if (diff == 0)
+			return aLength;
+		
+		if(!a.isExact && !b.isExact) {//shorten the long one
+			if (diff > 0) {//a is longer
+				return bLength;
+			}else {//b is longer
+				return aLength;
 			}
-		}else {
-			//min
-			if(aP > bP) {
-				return bP;
-			}else {
-				return aP;
+		}else {//pad the short one
+			if (diff > 0) {//b is shorter
+				return aLength;
+			}else {//a is shorter
+				return bLength;
 			}
 		}
 	}
 	
-	public static void truncate(HPN a, int diff) {
+	public static HPN truncate(HPN a, HPN b, HPN z) {
+		int aLength = a.fracPart.length;
+		int bLength = b.fracPart.length;
+		int zLength = z.fracPart.length;
+		int precision = findPrecision(a,b);
+		System.out.println(precision);
 
-		if(diff!=0) {
-
-			if(a.isExact) {
-				for(int i = a.fracPart.length-1; i >= a.fracPart.length-diff; i--) {
-					if(a.fracPart[i] != 0) {
-						System.out.println("chopping off non-zeros");
-						a.isExact = false;
+		if(zLength > precision) {
+			//cut off and round
+			int[] newFrac = new int[precision];
+			for(int i = 0; i < precision; i++) {
+				newFrac[i] = z.fracPart[i];
+			}
+			
+			
+			if(z.fracPart[precision] > 4) {
+				//round
+				for(int i = precision - 1; i > 0; i--) {
+					newFrac[i]++;
+					if(newFrac[i] != 10) {
+						break;
+					}
+					newFrac[i] = 0;
+					if(i == 1) {
+						newFrac[0]++;
 					}
 				}
-			}
-			int[] replacement = new int[a.precision];
-			
-			for(int i = 0; i < replacement.length; i++) {
-				replacement[i] = a.fracPart[i]; 
-			}
-			
-			a.fracPart = replacement; 
-			a.isTruncated = true;
-		}
-	}
-	
-	public static void applyPrecision(HPN a) {
-
-		int diff = a.fracPart.length - a.precision ;
-
-		if(diff!=0) {
-			System.out.println("enter");
-			if(a.isExact) {
-				for(int i = a.fracPart.length; i >= a.fracPart.length-diff; i--) {
-					if(a.fracPart[i] != 0) {
-						System.out.println("chopping off non-zeros");
-						a.isExact = false;
-					}
+				
+				if(newFrac[0] > 9) {
+					newFrac[0] = 0;
+					z.intPart++;
 				}
 			}
-			int[] replacement = new int[a.precision];
+			z.fracPart = newFrac;
 			
-			for(int i = 0; i < replacement.length; i++) {
-				replacement[i] = a.fracPart[i]; 
+		}else if( zLength < precision) {
+			int diff = precision - zLength;
+			int[] newFrac = new int[precision];
+			for(int i = 0; i < z.fracPart.length; i++) {
+				newFrac[i] = z.fracPart[i];
 			}
-			
-			a.fracPart = replacement; 
-			if(a.isExact == false) {
-				a.isTruncated = true;
+			for(int k= precision - diff; k < newFrac.length; k++) {
+				newFrac[k] = 0;
 			}
 		}
+		return z;
 	}
 	
 	public static HPN geometricSum(int a, int b) {
