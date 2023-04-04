@@ -86,7 +86,8 @@ public class HPN {
 		this.isNegative = false; 
 		//split input
 		int decimalIndex = s.indexOf('.');
-		if(decimalIndex != 0) {
+		
+		if(decimalIndex > 0) {
 			String intPart = s.substring(0, decimalIndex);
 			this.intPart = Integer.parseInt(intPart);
 		}else if(decimalIndex < 0) {
@@ -103,9 +104,12 @@ public class HPN {
 		this.fracPart = new int[fracLength];
 
 		//fills fracPart into array
-		for(int i = 0; i < fracLength; i++) {
-			this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
+		if(decimalIndex >= 0) {
+			for(int i = 0; i < fracLength; i++) {
+				this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
+			}
 		}
+		
 		if(s.charAt(0) == '-') {
 			this.isNegative = true;
 			s = s.substring(1);
@@ -124,11 +128,7 @@ public class HPN {
 		//split input
 		int decimalIndex = s.indexOf('.');
 		
-		String fracPart = s.substring(decimalIndex + 1);
-		
-		int fracLength = fracPart.length(); 
-		
-		if(decimalIndex < 0) {
+		if(decimalIndex > 0) {
 			String intPart = s.substring(0, decimalIndex);
 			this.intPart = Integer.parseInt(intPart);
 		}else if(decimalIndex < 0) {
@@ -137,14 +137,20 @@ public class HPN {
 		else {
 			intPart = 0;
 		}
+		String fracPart = s.substring(decimalIndex + 1);
+		
+		int fracLength = fracPart.length(); 
 		
 		
 		this.fracPart = new int[fracLength];
 
 		//fills fracPart into array
-		for(int i = 0; i < fracLength; i++) {
-			this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
+		if(decimalIndex >= 0) {
+			for(int i = 0; i < fracLength; i++) {
+				this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
+			}
 		}
+		
 		if(s.charAt(0) == '-') {
 			this.isNegative = true;
 			s = s.substring(1);
@@ -152,7 +158,8 @@ public class HPN {
 		}
 
 		checkNegative(this);
-		this.precision = this.fracPart.length; 
+		this.precision = this.fracPart.length;
+		this.isExact = true;
 		this.isExact = isExact; 
 		
 	}
@@ -254,55 +261,134 @@ public class HPN {
 	 * @param b -> new HPN
 	 * @return
 	 */
-	public static HPN subtract(HPN a, int b) { 
-		HPN B = new HPN(b); 
-		return subtract(a,B);
-	}
+//	public static HPN subtract(HPN a, int b) { 
+//		HPN B = new HPN(b); 
+//		return subtract(a,B);
+//	}
+//	
+//	
+//	public static HPN subtract(HPN a, HPN b) {
+//		System.out.println(a.toString() + " - " + b.toString());
+//		
+//		HPN result = new HPN(a.intPart - b.intPart);
+//		
+//		int[][] subtract = padZeros(a.fracPart,b.fracPart);
+//		int[] resultFrac = new int[subtract[0].length];
+//		
+//		for(int i = subtract[0].length - 1; i > 0; i--) {
+//
+//			if(subtract[0][i] == -1) {
+//				subtract[0][i] = 9;
+//				subtract[0][i-1]--;
+//			}
+//			if(subtract[0][i] < subtract[1][i]) {
+//				subtract[0][i-1]--;
+//				subtract[0][i] = concat(1,subtract[0][i]);
+//			}
+//				resultFrac[i] = subtract[0][i] - subtract[1][i];
+//		}
+//
+//		if(subtract[0][0] < 0) {
+//			subtract[0][0] = 9;
+//			a.intPart--;
+//		}
+//		
+//		if(subtract[0][0] < subtract[1][0]) {
+//			a.intPart--;
+//			subtract[0][0] = concat(1,subtract[0][0]);
+//		}
+//		
+//		resultFrac[0] = subtract[0][0] - subtract[1][0];
+//		result.fracPart = resultFrac;
+//		result.intPart = a.intPart - b.intPart; 
+//		
+//		checkNegative(result);
+//		
+//		if(result.isNegative) {
+//			return(negate(subtract(b,a))); 
+//		}
+//		
+//		result.precision = calculatePrecision(a,b);
+//		return result;
+//	}
 	
-	
-	public static HPN subtract(HPN a, HPN b) {
+	public static HPN subtract(HPN a,HPN b) {
 		System.out.println(a.toString() + " - " + b.toString());
+		/// Note that above, .toString() is unnecessary; println calls toString automatically.
+		/// Thus, we can write this as System.out.println (a + " - " + b);
 		
+		// take care of some reductions first
+		/// if there's only one command inside the block, the braces are optional.
+		if (isZero(b)) 
+			return copy(a); // a - 0 = a
+		if (isZero(a))
+			return negate(b); // 0 - b = (-b)
+		if (b.isNegative)
+			return add(a,negate(b)); // a - b = a + (-b)
+			/// In this case, we don't care whether a < 0; add() will take care of that.
+			/// I like putting spaces after commas, and before left parentheses if there's an argument.
+			/// the return line above would look like return add (a, negate (b));
+			/// It helps break up the formulas visually.
+		if (a.isNegative)
+			return negate(add(negate(a),b)); // a - b = -((-a) + b)
+		
+		// Now, a, b > 0. We need to check to see that a >= b, because otherwise
+		//      the algorithm doesn't work.
+		boolean wrongOrder = false;
+		if(b.intPart > a.intPart) {
+			System.out.println("uhoh");
+			wrongOrder = true;
+		}
+		else {
+			System.out.println("else");
+			for (int i = 0; i < a.fracPart.length; i++) {
+				if (b.fracPart[i] > a.fracPart[i]) 
+					wrongOrder = true;
+				if (b.fracPart[i] != a.fracPart[i])
+					break;
+				} 
+		}
+		
+		//added this if
+		if(b.intPart < a.intPart) {
+			System.out.println("uhoh");
+			wrongOrder = false;
+		}
+				/// you might want to step through this loop with a.fracPart = [1, 2, 3], b = [1, 2, 3];
+				/// a = [1, 2, 3], b = [1, 4, 2]; and a = [1, 2, 3], b = [1, 1, 1] to see why this works.
+		if (wrongOrder) {
+			
+			return negate(subtract(b, a)); // a - b = -(b - a)
+		}
+		
+		// now we have a >= b > 0, so we can use the regular subtraction algorithm.
 		HPN result = new HPN(a.intPart - b.intPart);
-		
 		int[][] subtract = padZeros(a.fracPart,b.fracPart);
-		int[] resultFrac = new int[subtract[0].length];
+		System.out.println("padding");
+		// result.fracPart will be subtract [0] after the algorithm.
+		/// We don't need a new array if we change subtract [0].
 		
 		for(int i = subtract[0].length - 1; i > 0; i--) {
-
-			if(subtract[0][i] == -1) {
-				subtract[0][i] = 9;
-				subtract[0][i-1]--;
+			if(subtract[1][i] > subtract[0][i]) {
+				subtract[0][i-1] --;
+				subtract[0][i] += 10;
+				} // borrow from previous digit
+			subtract[0][i] -= subtract[1][i];
 			}
-			if(subtract[0][i] < subtract[1][i]) {
-				subtract[0][i-1]--;
-				subtract[0][i] = concat(1,subtract[0][i]);
-			}
-				resultFrac[i] = subtract[0][i] - subtract[1][i];
-		}
+			
+		if(subtract[1][0] > subtract[0][0]) {
+			result.intPart --;
+			subtract[0][0] += 10;
+			} // borrow from intPart
+		subtract[0][0] -= subtract[1][0];
+		result.fracPart = subtract[0];
 
-		if(subtract[0][0] < 0) {
-			subtract[0][0] = 9;
-			a.intPart--;
-		}
-		
-		if(subtract[0][0] < subtract[1][0]) {
-			a.intPart--;
-			subtract[0][0] = concat(1,subtract[0][0]);
-		}
-		
-		resultFrac[0] = subtract[0][0] - subtract[1][0];
-		result.fracPart = resultFrac;
-		result.intPart = a.intPart - b.intPart; 
-		
-		checkNegative(result);
-		
-		if(result.isNegative) {
-			return(negate(subtract(b,a))); 
-		}
-		
-		result.precision = calculatePrecision(a,b);
+		result.isExact = a.isExact && b.isExact;
 		return result;
+	}
+
+	public static HPN subtract(HPN a, int b) {
+		return subtract(a, new HPN(b));
 	}
 	
 	/**
