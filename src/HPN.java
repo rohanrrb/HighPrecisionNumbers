@@ -3,27 +3,18 @@ import java.util.Objects;
 
 /**
  * HIGH PRECISION NUMBER PROJECT (HPN)
- * @author Rohan Bopardikar
+ * Using a custom High Precision Number object to calculate values of constants using common infinite series
  * 
- *TO DO LIST 3/25:
- *
-
- *More efficient way to toString (there's a different structure: (x) ? (y)...\
- *Current sign handling for division is to complicated
- *Constructor when no decimal present 
- *
- *Questions:
- *". When truncating an exact HPN, the answer will be exact iff (if and
-only if) all digits removed are 0s"
-	If HPN a is inExact and only zeros are removed, it is to stay inExact right?
+ * @author Rohan Bopardikar under Dr. Christopher Heckman
+ * 
+ * 
  */
 public class HPN {
 	
 	private int intPart; 
 	private int[] fracPart; 
 	private boolean isNegative;
-	private boolean isTruncated;
-	
+	private boolean isTruncated; //needed?
 	private boolean isExact; 
 
 	
@@ -58,7 +49,7 @@ public class HPN {
 	}
 	
 //Constructors	
-	//only int constructor
+	//Only int constructor
 	public HPN(int a) {
 		this.intPart = a;
 		this.fracPart = new int[]{0};
@@ -69,16 +60,17 @@ public class HPN {
 		
 	}
 	
-	//int with int[] constructor
+	//False by default for a multiplication bug
+	//System decision: Should constructors that do not accept
+	//isExact be exact by default?
 	public HPN(int a, int[] b) {
 		this.intPart = a;
 		this.fracPart = b;
 		this.isNegative = false; 
 		checkNegative(this);
-		this.isExact = true; 
+		this.isExact = false; 
 
 	}
-	
 	
 	//String constructor
 	public HPN(String s) {
@@ -161,9 +153,6 @@ public class HPN {
 		truncate(this, precision);
 	}
 	
-	
-
-	
 	public HPN(String s, boolean isExact) {
 		this.isNegative = false; 
 		//split input
@@ -206,6 +195,7 @@ public class HPN {
 	}
 	
 	
+	//Constants
 	public final static HPN zero() {
 		return new HPN("0.0", true);
 	}
@@ -216,7 +206,7 @@ public class HPN {
 	
 	
 	/**
-	 * Adds HPN and int
+	 * Adds HPN and int by creating a new HPN for the int
 	 * @param a
 	 * @param b
 	 * @return HPN sum
@@ -236,11 +226,15 @@ public class HPN {
 	 * @return HPN sum
 	 */
 	public static HPN add(HPN a, HPN b) {
+		//Add intParts
 		int intSum = a.intPart + b.intPart;
+		//Create Sum HPN
 		HPN sum = new HPN(intSum);
 		
+		//Calculation Display
 		System.out.println(a.toString() + " + " + b.toString());
 		
+		//Check for negativity
 		if(a.isNegative && !b.isNegative) {
 			return subtract(b, negate(copy(a)));
 		}
@@ -251,14 +245,21 @@ public class HPN {
 		if(a.isNegative && b.isNegative) {
 			return negate(add(negate(copy(a)),negate(copy(b))));
 		}
+		//Check for either adding zero
+		if( a == zero()) {
+			return copy(b);
+		}
+		if(b == zero()) {
+			return copy(a);
+		}
 		
-		//processing
+		//Fill into 2D array with zeros padded to match lengths
 		int addition[][] = padZeros(a.fracPart, b.fracPart);
 		
-		//initialize array for fracPart
+		//Initialize array for fracPart
 		int[] fracSum = new int[addition[0].length]; 
 		
-		//adding logic
+		//Adding fracPart logic
 		int carry = 0;
 		for(int i = fracSum.length-1; i >= 1; i--) {
 			fracSum[i] = addition[0][i] + addition[1][i] + carry;
@@ -277,18 +278,29 @@ public class HPN {
 			fracSum[0] = fracSum[0]%10;
 			carry = 1;
 		}
+		
+		//Carry to intPart if needed
 		sum.intPart += carry;
+		
+		//Assign added fracPart to sum
 		sum.fracPart = fracSum;
 		
+		//If either addend is not exact, sum will follow suit
 		if(!a.isExact || !b.isExact) {
 			sum.isExact = false;
 		}
 		
+		//Truncate if needed
 		return truncate(a,b,sum);
 	}
 
 
-	
+	/**WRITTEN BY DR. HECKMAN
+	 * Subtracts two HPN's
+	 * @param a
+	 * @param b
+	 * @return HPN result
+	 */
 	public static HPN subtract(HPN a,HPN b) {
 		System.out.println(a.toString() + " - " + b.toString());
 		/// Note that above, .toString() is unnecessary; println calls toString automatically.
@@ -326,9 +338,8 @@ public class HPN {
 				} 
 		}
 		
-		//added this if
+		//Added by Rohan Bopardikar
 		if(b.intPart < a.intPart) {
-			System.out.println("uhoh");
 			wrongOrder = false;
 		}
 				/// you might want to step through this loop with a.fracPart = [1, 2, 3], b = [1, 2, 3];
@@ -369,16 +380,21 @@ public class HPN {
 	}
 	
 	/**
-	 * 
+	 * Multiplies a HPN by an int
 	 * @param a
 	 * @param b
-	 * @return
-	 * Issue? Returns a 0 at the end for some cases ex) 20
-	 * Sign handling not updated
+	 * @return HPN product
 	 */
 	public static HPN multiply(HPN a, int b) {
+		//Calculation Display
 		System.out.println(a.toString() + " * " + b);
 		
+		//Multiplying by zero
+		if(a == zero() || b == 0) {
+			return zero();
+		}
+		
+		//Check negativity
 		if(a.isNegative && b > 0) {
 			a.isNegative = false;
 			HPN result = multiply(a,b); 
@@ -398,15 +414,20 @@ public class HPN {
 			b *= -1; 
 			return multiply(a,b);
 		}
+		
+		//Multiply intPart
 		int intProduct = a.intPart * b; 
+		
+		//Initialize product array & carry
 		int[] fracProduct = new int[a.fracPart.length];
-
 		int carry = 0;
 
+	//fracPart multiplication logic
+		
+		//Iterating <--
 		for (int i = fracProduct.length -1; i >= 0; i--) {
-			
 			 carry = a.fracPart[i]*b + carry; 
-			 if(carry > 9) {//new
+			 if(carry > 9) {
 				 String carryString = ""+ Integer.toString(carry);
 				 fracProduct[i] = Integer.parseInt(carryString.substring(carryString.length() -1));
 				 carry = Integer.parseInt(carryString.substring(0, carryString.length()-1));
@@ -418,19 +439,36 @@ public class HPN {
 				 carry = 0;
 			 }
 		}
-
+		
+		//Initialize product with calculated int and frac Parts
 		HPN product = new HPN(intProduct, fracProduct);	
-		if(b == 0) {
-			return zero();
+
+		//If HPN factor is exact, product follows
+		if(a.isExact) {
+			product.isExact = true;
 		}
 		return product;
 	}
 	
-	
+	/**
+	 * Divides a HPN by int
+	 * @param a
+	 * @param b
+	 * @return quotient
+	 */
 	public static HPN divide(HPN a, int b) {
 		System.out.println(a.toString() + " / " + b);
 		boolean exact = true;
-
+		
+		if(isZero(a)) {
+			return zero();
+		}
+		
+		if(b == 0 ) {
+			return null;
+		}
+		
+		//Check Negativity
 		if(a.isNegative && b < 0) {
 			a.isNegative = false;
 			b *= -1; 
@@ -451,7 +489,7 @@ public class HPN {
 			return result;
 		}
 		
-		
+		//Initialize
 		int whole = 0; 
 		int intQuotient;
 
@@ -465,7 +503,7 @@ public class HPN {
 			a.intPart -= whole; 
 			HPN quotient = divide(a, b);
 			quotient.intPart += intQuotient; 
-			System.out.println("+" + intQuotient);
+			
 			return quotient; 
 		}
 		
@@ -474,8 +512,6 @@ public class HPN {
 		int[] qFrac = new int[rFrac.length]; 
 		HPN quotient = new HPN(0, qFrac);
 		
-		
-			
 			dividend = concat(remainder.intPart, rFrac[0]);
 			int miniQ = dividend/b;
 			qFrac[0] = miniQ; 
@@ -483,6 +519,8 @@ public class HPN {
 			dividend = dividend - product;
 
 			int i = 1;
+			
+			//Repeat until division is complete
 			while((dividend != 0 || i != rFrac.length) && i < 10) {
 				if(i > rFrac.length -1){
 					rFrac = expand(rFrac);
@@ -500,6 +538,7 @@ public class HPN {
 				product = miniQ *b;
 				dividend = dividend - product; 
 				
+				//If the quotient exceeds max decimal value, stop and make not exact
 				if(i == 9) {
 					exact = false;
 				}
@@ -512,10 +551,6 @@ public class HPN {
 		return quotient;
 	}
 
-	
-
-	
-	
 	public static int concat(int a, int b) {
 		String s1 = Integer.toString(a);
         String s2 = Integer.toString(b);
@@ -543,29 +578,36 @@ public class HPN {
 	 * @return 2d Array
 	 */
 	public static int[][] padZeros(int[] a, int[] b){
-		int[][] ordered = new int[2][];
-		int diff = 0;
 		
+		//Initialize
+		int[][] ordered = new int[2][];
+		
+	//Same Length?
+		//No
 		if(a.length != b.length) {
 			
+			//a is Longer, need to pad b
 			if(a.length > b.length) {
-				diff = a.length - b.length;
+				//New fracPart for b
 				int[] bNorm = new int[a.length];
 				
+				//Copy values
 				for(int i = 0; i < b.length; i++) {
 					bNorm[i] = b[i];
 				}
+				
+				//Fill remaining vals with 0
 				for(int j = b.length; j < bNorm.length; j++) {
 					bNorm[j] = 0;
 				}
 				
+				//Assign & Return
 				ordered[0] = a; 
 				ordered[1] = bNorm; 
 				return ordered;
 			}
-			
+			//b is Longer, need to pad a
 			else {
-				diff = b.length - a.length;
 				int[] aNorm = new int[b.length];
 				
 				for(int i = 0; i < a.length; i++) {
@@ -579,15 +621,19 @@ public class HPN {
 				ordered[1] = b; 
 				return ordered;
 			}
-			
-			
+		//Yes
 		}else {
+			//Assign and return, no padding needed
 			ordered[0] = a; 
 			ordered[1] = b;
 			return ordered;
 		}
 	}
 	
+	/**
+	 * Checks and Updates sign
+	 * @param a
+	 */
 	public static void checkNegative(HPN a) {
 		if(!a.isNegative && a.intPart < 0) {
 			a.isNegative = true; 
@@ -595,6 +641,12 @@ public class HPN {
 		}
 	}
 	
+	
+	/***
+	 * 
+	 * @param a
+	 * @return a: Returns SAME OBJECT but opposite sign
+	 */
 	public static HPN negate(HPN a) {
 		if(a.isNegative) {
 			a.isNegative = false;
@@ -606,7 +658,11 @@ public class HPN {
 		return a;
 	}
 	
-	
+	/**
+	 * 
+	 * @param a
+	 * @return HPN b: new object, same attributes as a
+	 */
 	public static HPN copy(HPN a) {
 		//new HPN with same intPart
 		HPN b = new HPN(a.intPart);
@@ -620,38 +676,19 @@ public class HPN {
 		//isExact
 		boolean bExact = a.isExact;
 		b.isExact = bExact;
-		
-		//
-		
+
 		return b; 
 	}
-	
 
-
-//	
-//	public static int calculatePrecision(HPN a, HPN b) {
-//		int aP = a.precision;
-//		int bP = b.precision;
-//		
-//		if(a.isExact || b.isExact) {
-//			//max
-//			if(aP > bP) {
-//				return aP;
-//			}else {
-//				return bP;
-//			}
-//		}else {
-//			//min
-//			if(aP > bP) {
-//				return bP;
-//			}else {
-//				return aP;
-//			}
-//		}
-//	}
-	
-
-
+	/**
+	 * Used in truncate()
+	 * @param a
+	 * @param b
+	 * @return int precision
+	 * 
+	 * If one of the values is exact, return max precision
+	 * If both are not exact, return min precision
+	 */
 	private static int findPrecision(HPN a, HPN b) {
 		int aLength = a.fracPart.length;
 		int bLength = b.fracPart.length;
@@ -676,23 +713,41 @@ public class HPN {
 		}
 	}
 	
+	/**
+	 * Used before returning in add() and subtract()
+	 * 
+	 * @param a: addend/minuend
+	 * @param b: addend/subtrahend
+	 * @param z: sum/difference
+	 * @return z, but shortened or padded
+	 * If shortened, z gets rounded
+	 * 
+	 *Is there even a case where z gets padded?
+	 */
 	public static HPN truncate(HPN a, HPN b, HPN z) {
-
+		
+		//Init
 		int zLength = z.fracPart.length;
 		int precision = findPrecision(a,b);
-
+		
+		//Need to cut off extra digits and round
 		if(zLength > precision) {
-			//cut off and round
+			//Calculation Display
 			System.out.println("truncating " + z + "to " + precision + " digit(s).");
-			z.isTruncated = true;
+			
+			//Update attributes
+			z.isTruncated = true;//?
 			z.isExact = false;
 			
+			//Create new shortened array
 			int[] newFrac = new int[precision];
+			
+			//Fill with values from original
 			for(int i = 0; i < precision; i++) {
 				newFrac[i] = z.fracPart[i];
 			}
 			
-			
+			//Rounding logic
 			if(z.fracPart[precision] > 4) {
 				//round
 				for(int i = precision - 1; i > 0; i--) {
@@ -709,13 +764,17 @@ public class HPN {
 					newFrac[0]++;
 				}
 				
+				//Tens place carries over to intPart
 				if(newFrac[0] > 9) {
 					newFrac[0] = 0;
 					z.intPart++;
 				}
 			}
-			z.fracPart = newFrac;
 			
+			//Assign
+			z.fracPart = newFrac;
+		
+		//Padding logic, untested
 		}else if( zLength < precision) {
 			System.out.println("truncating " + z + "to " + precision + " digit(s).");
 			z.isTruncated = true;
@@ -729,6 +788,7 @@ public class HPN {
 				newFrac[k] = 0;
 			}
 		}
+		
 		return z;
 	}
 	
@@ -795,46 +855,122 @@ public class HPN {
 	}
 	
 	
-	
+	/**
+	 * [1,inf)SUM (a * r^n) =  1 + (a/b) + (a/b)^2 + ...
+	 * a is 1
+	 * @param a
+	 * @param b
+	 * @return sum
+	 */
 	public static HPN geometricSum(int a, int b) {
 		String sequence = "";
 		String sums = "";
-		 // 1 + (a/b) + (a/b)^2 + ...
-//		check for convergence
+		
+		//check for convergence
 		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
+			System.out.println("DIVERGES");
 			return null;
 		}else {
-			System.out.println("converges");
+			System.out.println("CONVERGES");
 		}
         HPN sum = zero();
         HPN term = one();
 
         while(!isZero(term)) {
+        	//Update strings
         	sequence += term + ", "; 
-        	//System.out.println(Objects.toString("sum: " +sum));
-            System.out.println("---");
         	sums += sum + ", ";
+        	
+        	//Separating term calculations
+            System.out.println("---");
+            
         	sum = add(sum, term);
+        	
+        	//multiply by r: multiply by numerator, divide by denominator
         	term = multiply(term, a);
         	term = divide(term, b);
         	
         }
+        //Calculation Display
         System.out.println("---------------");
         System.out.println("Sequence: " + sequence);
         System.out.println("Partial Sums: " + sums);
+        
         return sum;
 	}
 	
-	//return e
+	/**
+	 * [first,inf)SUM (a * r^n) = m + m(a/b) + m(a/b)^2 + ...
+	 * a is up to user
+	 * @param a
+	 * @param b
+	 * @return sum
+	 * Will be more accurate if I call origican geoSum and multiply m?
+	 *
+	 */
+	public static HPN geometricSum(int first, int a, int b) {
+		String sequence = "";
+		String sums = "";
+		 
+		//check for convergence
+		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
+			System.out.println("DIVERGES");
+			return null;
+		}else {
+			System.out.println("CONVERGES");
+		}
+        HPN sum = zero();
+        HPN term = new HPN(first);
+
+        while(!isZero(term)) {
+        	//Update strings
+        	sequence += term + ", "; 
+        	sums += sum + ", ";
+        	
+        	//Separating term calculations
+            System.out.println("---");
+            
+        	sum = add(sum, term);
+        	
+        	//multiply by r: multiply by numerator, divide by denominator
+        	term = multiply(term, a);
+        	term = divide(term, b);
+        	
+        }
+        //Calculation Display
+        System.out.println("---------------");
+        System.out.println("Sequence: " + sequence);
+        System.out.println("Partial Sums: " + sums);
+        
+        return sum;
+	}
+	
+	//return e using eToX()
 	public static HPN e() {
 		return eToX(1);
 	}
+	
+	/**
+	 * e^x = [0,inf)SUM (x^n/n!) = 1 + x + (x^2/2!) + (x^3/3!) + ...
+	 * @param x
+	 * @return
+	 */
 	public static HPN eToX(int x) {
+		//No convergence check, RC = inf
+		//Edge cases
+		if(x == 0) {
+			return one();
+		}
+		if(x < 0) {
+			x = 0;
+		}
+		
+		//init
 		String sequence = "";
 		String sums = "";
-		
 		HPN sum = zero();
 		HPN term = one();
+		
 		int n = 0;
 		
 		while(!isZero(term)) {
