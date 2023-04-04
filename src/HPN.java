@@ -21,11 +21,10 @@ public class HPN {
 	
 	private int intPart; 
 	private int[] fracPart; 
-	private boolean isNegative; //change to isNegative
+	private boolean isNegative;
 	private boolean isTruncated;
 	
 	private boolean isExact; 
-//	private int precision; 
 
 	
 	
@@ -223,14 +222,16 @@ public class HPN {
 	 * @return HPN sum
 	 */
 	public static HPN add(HPN a, int b) {
-		System.out.println(a.toString() + " + " + b);
-		HPN sum = new HPN(a.intPart + b); 
-		sum.fracPart = a.fracPart;
-		checkNegative(sum);
-		if(!a.isExact) {
-			sum.isExact = false;
-		}
-		return sum;
+//		System.out.println(a.toString() + " + " + b);
+//		HPN sum = new HPN(a.intPart + b); 
+//		sum.fracPart = a.fracPart;
+//		checkNegative(sum);
+//		if(!a.isExact) {
+//			sum.isExact = false;
+//		}
+//		return sum;
+		
+		return add(a, new HPN(b));
 	}
 	
 	public static HPN add(int a, HPN b) {
@@ -293,12 +294,7 @@ public class HPN {
 			sum.isExact = false;
 		}
 		
-
-		
-		
-		//,how many digits have been cut off
-//		truncate(sum,a.fracPart.length - a.fracPart.length);
-		return sum;
+		return truncate(a,b,sum);
 	}
 
 
@@ -622,11 +618,21 @@ public class HPN {
 	
 	
 	public static HPN copy(HPN a) {
+		//new HPN with same intPart
 		HPN b = new HPN(a.intPart);
-		b.isExact = a.isExact;
-		b.fracPart = a.fracPart;
-		b.isNegative = a.isNegative;
-		b.isTruncated = a.isTruncated;
+		
+		//copy fracPart
+		int bFrac [] = new int[a.fracPart.length];
+		System.out.println("a length: " + a.fracPart.length);
+		System.arraycopy(a.fracPart, 0, bFrac, 0, bFrac.length);
+		b.fracPart = bFrac;
+		
+		//isExact
+		boolean bExact = a.isExact;
+		b.isExact = bExact;
+		
+		//
+		
 		return b; 
 	}
 	
@@ -681,14 +687,14 @@ public class HPN {
 	}
 	
 	public static HPN truncate(HPN a, HPN b, HPN z) {
-		int aLength = a.fracPart.length;
-		int bLength = b.fracPart.length;
+
 		int zLength = z.fracPart.length;
 		int precision = findPrecision(a,b);
 
 		if(zLength > precision) {
 			//cut off and round
 			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			z.isTruncated = true;
 			z.isExact = false;
 			
 			int[] newFrac = new int[precision];
@@ -722,6 +728,8 @@ public class HPN {
 			
 		}else if( zLength < precision) {
 			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			z.isTruncated = true;
+			z.isExact = false;
 			int diff = precision - zLength;
 			int[] newFrac = new int[precision];
 			for(int i = 0; i < z.fracPart.length; i++) {
@@ -734,15 +742,22 @@ public class HPN {
 		return z;
 	}
 	
+	/**
+	 * Truncates a HPN to given precision
+	 * Needed for ("HPN", precision) and similar constructors
+	 * @param z
+	 * @param precision
+	 * @return
+	 */
 	public static HPN truncate(HPN z, int precision) {
 
 		int zLength = z.fracPart.length;
 	
-		
-
 		if(zLength > precision) {
 			z.isExact = false;
 			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			z.isExact = false;
+			z.isTruncated = true;
 			//cut off and round
 			
 			int[] newFrac = new int[precision];
@@ -776,6 +791,7 @@ public class HPN {
 			
 		}else if( zLength < precision) {
 			System.out.println("truncating to " + precision + " digits.");
+			z.isTruncated = true;
 			int diff = precision - zLength;
 			int[] newFrac = new int[precision];
 			for(int i = 0; i < z.fracPart.length; i++) {
