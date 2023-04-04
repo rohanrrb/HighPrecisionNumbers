@@ -121,6 +121,48 @@ public class HPN {
 		this.isExact = true;
 	}
 	
+	public HPN(String s, int precision) {
+		
+		this.isNegative = false; 
+		//split input
+		int decimalIndex = s.indexOf('.');
+		
+		if(decimalIndex > 0) {
+			String intPart = s.substring(0, decimalIndex);
+			this.intPart = Integer.parseInt(intPart);
+		}else if(decimalIndex < 0) {
+			this.intPart = Integer.parseInt(s);
+		}
+		else {
+			intPart = 0;
+		}
+		String fracPart = s.substring(decimalIndex + 1);
+		
+		int fracLength = fracPart.length(); 
+		
+		
+		this.fracPart = new int[fracLength];
+
+		//fills fracPart into array
+		if(decimalIndex >= 0) {
+			for(int i = 0; i < fracLength; i++) {
+				this.fracPart[i] = Integer.parseInt(fracPart.substring(i,i+1));
+			}
+		}
+		
+		if(s.charAt(0) == '-') {
+			this.isNegative = true;
+			s = s.substring(1);
+			this.intPart *= -1;
+		}
+
+		checkNegative(this);
+
+		this.isExact = true;
+		truncate(this, precision);
+	}
+	
+	
 
 	
 	public HPN(String s, boolean isExact) {
@@ -165,10 +207,10 @@ public class HPN {
 	}
 	
 	
-	public final HPN zero() {
+	public final static HPN zero() {
 		return new HPN("0.0", true);
 	}
-	public final HPN one() {
+	public final static HPN one() {
 		return new HPN("1.0", true);
 	}
 
@@ -373,27 +415,27 @@ public class HPN {
 		int intProduct = a.intPart * b; 
 		int[] fracProduct = new int[a.fracPart.length];
 
-		int temp = 0;
+		int carry = 0;
 
 		for (int i = fracProduct.length -1; i >= 0; i--) {
 			
-			 temp = a.fracPart[i]*b + temp; 
-			 if(temp > 9) {//new
-				 String tempString = ""+ Integer.toString(temp);
-				 fracProduct[i] = Integer.parseInt(tempString.substring(tempString.length() -1));
-				 temp = Integer.parseInt(tempString.substring(0, tempString.length()-1));
+			 carry = a.fracPart[i]*b + carry; 
+			 if(carry > 9) {//new
+				 String carryString = ""+ Integer.toString(carry);
+				 fracProduct[i] = Integer.parseInt(carryString.substring(carryString.length() -1));
+				 carry = Integer.parseInt(carryString.substring(0, carryString.length()-1));
 				 if(i == 0) {
-					 intProduct += temp;
+					 intProduct += carry;
 				 }
 			 }else {
-				 fracProduct[i] = temp;
-				 temp = 0;
+				 fracProduct[i] = carry;
+				 carry = 0;
 			 }
 		}
 
 		HPN product = new HPN(intProduct, fracProduct);	
 		if(b == 0) {
-			return zero;
+			return zero();
 		}
 		return product;
 	}
@@ -643,10 +685,12 @@ public class HPN {
 		int bLength = b.fracPart.length;
 		int zLength = z.fracPart.length;
 		int precision = findPrecision(a,b);
-		System.out.println(precision);
 
 		if(zLength > precision) {
 			//cut off and round
+			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			z.isExact = false;
+			
 			int[] newFrac = new int[precision];
 			for(int i = 0; i < precision; i++) {
 				newFrac[i] = z.fracPart[i];
@@ -656,14 +700,17 @@ public class HPN {
 			if(z.fracPart[precision] > 4) {
 				//round
 				for(int i = precision - 1; i > 0; i--) {
+					
 					newFrac[i]++;
 					if(newFrac[i] != 10) {
 						break;
 					}
 					newFrac[i] = 0;
-					if(i == 1) {
-						newFrac[0]++;
-					}
+					
+				}
+				
+				if(z.fracPart[1] > 4) {
+					newFrac[0]++;
 				}
 				
 				if(newFrac[0] > 9) {
@@ -674,6 +721,7 @@ public class HPN {
 			z.fracPart = newFrac;
 			
 		}else if( zLength < precision) {
+			System.out.println("truncating " + z + "to " + precision + " digit(s).");
 			int diff = precision - zLength;
 			int[] newFrac = new int[precision];
 			for(int i = 0; i < z.fracPart.length; i++) {
@@ -686,6 +734,62 @@ public class HPN {
 		return z;
 	}
 	
+	public static HPN truncate(HPN z, int precision) {
+
+		int zLength = z.fracPart.length;
+	
+		
+
+		if(zLength > precision) {
+			z.isExact = false;
+			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			//cut off and round
+			
+			int[] newFrac = new int[precision];
+			for(int i = 0; i < precision; i++) {
+				newFrac[i] = z.fracPart[i];
+			}
+			
+			
+			if(z.fracPart[precision] > 4) {
+
+				//round
+				for(int i = precision - 1; i > 0; i--) {
+					newFrac[i]++;
+					if(newFrac[i] != 10) {
+						break;
+					}
+					newFrac[i] = 0;
+					
+				}
+				if(z.fracPart[1] > 4) {
+
+					newFrac[0]++;
+				}
+				
+				if(newFrac[0] > 9) {
+					newFrac[0] = 0;
+					z.intPart++;
+				}
+			}
+			z.fracPart = newFrac;
+			
+		}else if( zLength < precision) {
+			System.out.println("truncating to " + precision + " digits.");
+			int diff = precision - zLength;
+			int[] newFrac = new int[precision];
+			for(int i = 0; i < z.fracPart.length; i++) {
+				newFrac[i] = z.fracPart[i];
+			}
+			for(int k= precision - diff; k < newFrac.length; k++) {
+				newFrac[k] = 0;
+			}
+		}
+		return z;
+	}
+	
+	
+	
 	public static HPN geometricSum(int a, int b) {
 		String series = "";
 		 // 1 + (a/b) + (a/b)^2 + ...
@@ -695,7 +799,7 @@ public class HPN {
 		}else {
 			System.out.println("converges");
 		}
-        HPN sum = copy(zero);
+        HPN sum = zero();
         HPN term = new HPN(1);
 
         while(isZero(term) == false) {
