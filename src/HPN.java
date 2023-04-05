@@ -60,6 +60,15 @@ public class HPN {
 		
 	}
 	
+	public HPN(int a, int precision) {
+		this.intPart = a;
+		this.fracPart = new int[]{0};
+		this.isNegative = false; 
+		checkNegative(this);
+		this.isExact = true; 
+		truncate(this, precision);
+	}
+	
 	//False by default for a multiplication bug
 	//System decision: Should constructors that do not accept
 	//isExact be exact by default?
@@ -201,6 +210,13 @@ public class HPN {
 	}
 	public final static HPN one() {
 		return new HPN("1.0", true);
+	}
+	
+	public final static HPN zero(int precision) {
+		return new HPN("0.0", precision);
+	}
+	public final static HPN one(int precision) {
+		return new HPN("1.0", precision);
 	}
 
 	
@@ -460,14 +476,16 @@ public class HPN {
 	 */
 	/// CCH's version of divide
 	public static HPN divide(HPN a, int b) {
+		System.out.println(a.toString() + " / " + b);
+		
 		if (a.isNegative) 
 			return negate (divide (negate (a), b)); // a / b = -[ (-a)  b]
 		if (b < 0)
 			return negate (divide (a, -b)); // a / b = - [a / (-b)]
 		if (b == 1)
 			return copy (a); // a / 1 = a.
-		if (a.isZero)
-			return HPN.zero (a.precision()); // 0 / b = 0 ... We're assuming b is not zero here.
+		if (isZero(a))
+			return HPN.zero(a.precision()); // 0 / b = 0 ... We're assuming b is not zero here.
 		
 		// now, a >= 0 and b > 0
 		HPN quotient = new HPN (a.intPart / b, a.precision());
@@ -669,7 +687,7 @@ public class HPN {
 		//Need to cut off extra digits and round
 		if(zLength > precision) {
 			//Calculation Display
-			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			System.out.println("truncating " + z  + " "+ (precision-zLength) + " digit(s).");
 			
 			//Update attributes
 			z.isTruncated = true;//?
@@ -712,7 +730,8 @@ public class HPN {
 		
 		//Padding logic, untested
 		}else if( zLength < precision) {
-			System.out.println("truncating " + z + "to " + precision + " digit(s).");
+			
+			System.out.println("padding " + z + " " + (precision-zLength) + " zeros");
 			z.isTruncated = true;
 			z.isExact = false;
 			int diff = precision - zLength;
@@ -776,9 +795,10 @@ public class HPN {
 			z.fracPart = newFrac;
 			
 		}else if( zLength < precision) {
-			System.out.println("truncating to " + precision + " digits.");
-			z.isTruncated = true;
+			System.out.println("padding " + z + " "+(precision - zLength) + " zeros.");
+
 			int diff = precision - zLength;
+
 			int[] newFrac = new int[precision];
 			for(int i = 0; i < z.fracPart.length; i++) {
 				newFrac[i] = z.fracPart[i];
@@ -786,9 +806,18 @@ public class HPN {
 			for(int k= precision - diff; k < newFrac.length; k++) {
 				newFrac[k] = 0;
 			}
+			
+			z.fracPart = newFrac;
 		}
 		return z;
 	}
+	
+	public int precision() {
+		return this.fracPart.length;
+	}
+	
+	
+	
 	
 	
 	/**
