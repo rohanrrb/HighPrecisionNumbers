@@ -5,10 +5,10 @@ public class HPN_Test {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		HPN x = new HPN("2.03", false);
-		HPN y = new HPN("3.0", false);
+		HPN x = new HPN("1.0", false);
+		HPN y = new HPN("-0.5", false);
 		
-		HPN result = HPN.geometricSum(2,1);
+		HPN result = HPN.ln2();
 		
 		System.out.println("---------------");
 		//System.out.println(Objects.toString(x));

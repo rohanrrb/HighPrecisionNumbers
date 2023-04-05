@@ -329,7 +329,7 @@ public class HPN {
 			wrongOrder = true;
 		}
 		else {
-			System.out.println("else");
+			//System.out.println("else");
 			for (int i = 0; i < a.fracPart.length; i++) {
 				if (b.fracPart[i] > a.fracPart[i]) 
 					wrongOrder = true;
@@ -352,7 +352,7 @@ public class HPN {
 		// now we have a >= b > 0, so we can use the regular subtraction algorithm.
 		HPN result = new HPN(a.intPart - b.intPart);
 		int[][] subtract = padZeros(a.fracPart,b.fracPart);
-		System.out.println("padding");
+		//System.out.println("padding");
 		// result.fracPart will be subtract [0] after the algorithm.
 		/// We don't need a new array if we change subtract [0].
 		
@@ -676,6 +676,10 @@ public class HPN {
 		//isExact
 		boolean bExact = a.isExact;
 		b.isExact = bExact;
+		
+		//isNegative
+		boolean bNeg = a.isNegative;
+		b.isNegative = bNeg;
 
 		return b; 
 	}
@@ -977,7 +981,9 @@ public class HPN {
         	sequence += term + ", "; 
         	System.out.println(Objects.toString("sum: " +sum));
         	sums += sum + ", ";
+        	System.out.println("---");
         	sum = add(sum, term);
+        	
         	term = multiply(term, x);
         	if(sum != one()) {
         		term = divide(term, n+1);
@@ -990,7 +996,45 @@ public class HPN {
         return sum;
 	}
 	
-	
+	/**
+	 * Slow rate of Convergence
+	 * @return
+	 */
+	public static HPN ln2() {
+		//init
+		String sequence = "";
+		String sums = "";
+		HPN sum = zero();
+		HPN term = one();
+		int n = 1;
+		
+		while(!isZero(term)) {
+			
+			sequence += term + ", "; 
+        	System.out.println(Objects.toString("sum: " +sum));
+        	sums += sum + ", ";
+        	System.out.println("---");
+        	System.out.println("ADDING " + term + " to " + sum);
+        	sum = add(sum, term);
+        	term = one();
+        	System.out.println("quo");
+        	term = divide(term, n+1);
+        	if(n%2 != 0) {
+        		negate(term);
+        	}
+        	if(n == 2000) {
+        		break;
+        	}
+        	
+        	
+        	n++;
+		}
+		System.out.println("---------------");
+        System.out.println("Sequence: " + sequence);
+        System.out.println("Partial Sums: " + sums);
+        System.out.println(n + " terms");
+		return sum;
+	}
 	
 	public static int factorial(int a) {
 		int product = 1; 
