@@ -295,11 +295,12 @@ public class HPN {
 	}
 
 
-	/**WRITTEN BY DR. HECKMAN
+	/**
 	 * Subtracts two HPN's
 	 * @param a
 	 * @param b
 	 * @return HPN result
+	 * @author Christopher Carl Heckman
 	 */
 	public static HPN subtract(HPN a,HPN b) {
 		System.out.println(a.toString() + " - " + b.toString());
@@ -328,7 +329,7 @@ public class HPN {
 			System.out.println("uhoh");
 			wrongOrder = true;
 		}
-		else {
+		else if (b.intPart == a.intPart) { // modified
 			//System.out.println("else");
 			for (int i = 0; i < a.fracPart.length; i++) {
 				if (b.fracPart[i] > a.fracPart[i]) 
@@ -338,7 +339,7 @@ public class HPN {
 				} 
 		}
 		
-		//Added by Rohan Bopardikar
+		//Added by Rohan Bopardikar. Probably unnecessary because I fixed the 'else' above.
 		if(b.intPart < a.intPart) {
 			wrongOrder = false;
 		}
@@ -455,99 +456,30 @@ public class HPN {
 	 * @param a
 	 * @param b
 	 * @return quotient
+	 * @author Christopher Carl Heckman
 	 */
+	/// CCH's version of divide
 	public static HPN divide(HPN a, int b) {
-		System.out.println(a.toString() + " / " + b);
-		boolean exact = true;
+		if (a.isNegative) 
+			return negate (divide (negate (a), b)); // a / b = -[ (-a)  b]
+		if (b < 0)
+			return negate (divide (a, -b)); // a / b = - [a / (-b)]
+		if (b == 1)
+			return copy (a); // a / 1 = a.
+		if (a.isZero)
+			return HPN.zero (a.precision()); // 0 / b = 0 ... We're assuming b is not zero here.
 		
-		if(isZero(a)) {
-			return zero();
-		}
-		
-		if(b == 0 ) {
-			return null;
-		}
-		
-		//Check Negativity
-		if(a.isNegative && b < 0) {
-			a.isNegative = false;
-			b *= -1; 
-			
-			return divide(a,b);
-		}
-		
-		if(!a.isNegative && b < 0) {
-			b *= -1;
-			HPN result = divide(a,b);
-			result.isNegative = true;
-			return result;
-		}
-		if(a.isNegative && b > 0) {
-			a.isNegative = false;
-			HPN result = divide(a,b);
-			result.isNegative = true;
-			return result;
-		}
-		
-		//Initialize
-		int whole = 0; 
-		int intQuotient;
-
-		int dividend; 
-		intQuotient = a.intPart/b;
-		int intRemainder = a.intPart % b; 
-		
-		if (intQuotient != 0) {
-			
-			whole = intQuotient*b; 
-			a.intPart -= whole; 
-			HPN quotient = divide(a, b);
-			quotient.intPart += intQuotient; 
-			
-			return quotient; 
-		}
-		
-		HPN remainder = new HPN(intRemainder, a.fracPart); 
-		int[] rFrac = remainder.fracPart; 
-		int[] qFrac = new int[rFrac.length]; 
-		HPN quotient = new HPN(0, qFrac);
-		
-			dividend = concat(remainder.intPart, rFrac[0]);
-			int miniQ = dividend/b;
-			qFrac[0] = miniQ; 
-			int product = miniQ * b; 
-			dividend = dividend - product;
-
-			int i = 1;
-			
-			//Repeat until division is complete
-			while((dividend != 0 || i != rFrac.length) && i < 10) {
-				if(i > rFrac.length -1){
-					rFrac = expand(rFrac);
-				}
-				dividend = concat(dividend, rFrac[i]);
-
-				miniQ = dividend/b;
-
-				if(i > qFrac.length -1) {
-					qFrac = expand(qFrac);
-				}
-				qFrac[i] = miniQ;
-				
-
-				product = miniQ *b;
-				dividend = dividend - product; 
-				
-				//If the quotient exceeds max decimal value, stop and make not exact
-				if(i == 9) {
-					exact = false;
-				}
-				i++;
+		// now, a >= 0 and b > 0
+		HPN quotient = new HPN (a.intPart / b, a.precision());
+		int currentRemainder = a.intPart % b;
+		for (int i = 0; i < a.precision(); i++) {
+			currentRemainder *= 10;
+			currentRemainder += a.fracPart [i];
+			quotient.fracPart [i] = currentRemainder / b;
+			currentRemainder %= b;
 			}
-			quotient.fracPart = qFrac;
-			
-		quotient.isExact = exact;
-
+		quotient.isExact = a.isExact && (currentRemainder == 0);
+		if (currentRemainder > b / 2) quotient.fracPart [a.precision() - 1] ++; // round
 		return quotient;
 	}
 
