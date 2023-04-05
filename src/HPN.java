@@ -1029,11 +1029,57 @@ public class HPN {
         	
         	n++;
 		}
+		
 		System.out.println("---------------");
         System.out.println("Sequence: " + sequence);
         System.out.println("Partial Sums: " + sums);
         System.out.println(n + " terms");
 		return sum;
+	}
+	
+	public static HPN recipFibo() {
+		String sequence = "";
+		String sums = "";
+		HPN sum = zero();
+		HPN term = one();
+		int denom = 0;
+
+		int n = 0;
+		int a = 1;
+		int b = 1;
+		
+		sequence += one();
+		while(!isZero(term)) {
+			sequence += term + ", "; 
+        	System.out.println(Objects.toString("sum: " +sum));
+        	sums += sum + ", ";
+         	sum = add(sum, term);
+          	System.out.println("---");
+        	
+        	if(n %2 == 0) {
+        		a += b;
+        		denom  = a;
+        		
+        	}else {
+        		b+=a;
+        		denom  = b;
+        	}
+        	
+        	term = divide(one(),denom );
+        	
+        	if(n == 40) {
+        		break;
+        	}
+        	
+        	
+        	n++;
+		}
+		
+		System.out.println("---------------");
+        System.out.println("Sequence: " + sequence);
+        System.out.println("Partial Sums: " + sums);
+        System.out.println(n + " terms");
+		return add(sum, 1);
 	}
 	
 	public static int factorial(int a) {
