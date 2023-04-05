@@ -1037,6 +1037,10 @@ public class HPN {
 		return sum;
 	}
 	
+	/**
+	 * Not so fast
+	 * @return
+	 */
 	public static HPN recipFibo() {
 		String sequence = "";
 		String sums = "";
