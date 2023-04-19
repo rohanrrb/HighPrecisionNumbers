@@ -560,12 +560,12 @@ public class HPN {
 			result.isNegative = true;
 			return result;
 		}
-		if(a.isNegative && b > 0) {
-			a.isNegative = false;
-			HPN result = divide(a,b);
-			result.isNegative = true;
-			return result;
-		}
+//		if(a.isNegative && b > 0) {
+//			a.isNegative = false;
+//			HPN result = divide(negate(copy(a)),b);
+//			result.isNegative = true;
+//			return result;
+//		}
 
 		//Initialize
 		int whole = 0; 
@@ -581,6 +581,7 @@ public class HPN {
 			a.intPart -= whole; 
 			HPN quotient = divide(a, b);
 			quotient.intPart += intQuotient; 
+			
 
 			return quotient; 
 		}
@@ -625,6 +626,9 @@ public class HPN {
 			quotient.fracPart = qFrac;
 
 		quotient.isExact = exact;
+		if(a.isNegative && b > 0) {
+			quotient.isNegative = true;
+		}
 
 		return quotient;
 	}
@@ -1178,7 +1182,6 @@ public class HPN {
 		int n = 0;
 		int counter = 3;
 
-		System.out.println("TERM: " + term);
 		//stop when term gets very small
 		while(!Objects.equals(term, zero())) {
 
@@ -1211,6 +1214,77 @@ public class HPN {
 		
 		if(isNegative) {
 			negate(sum);
+		}
+		
+		return sum;	
+	}
+	
+	//ln(1+x)
+	public static HPN ln1x(int a, int b) {
+
+		// Edge cases
+		if (a == 0) {
+			return zero();
+		}
+		if ( b == 0) {
+			return null;
+		}
+		
+		boolean isNegative = false;
+		if(b*a < 0) {
+			isNegative = true;
+		}
+		
+		//check for convergence, RC = 1
+		double ratio = a/b;
+		if (ratio > 1 || ratio < -1) {
+			return null;
+		}
+		
+		String sequence = "";
+		String sums = "";
+		
+		HPN term = divide(new HPN(a),b);
+		HPN sum = copy(term);
+		
+		sequence += term + ", ";
+		
+		int n = 0;
+		int counter = 2;
+		//stop when term gets very small
+		while(!isZero(term)) {
+		
+			term = multiply(term, a);
+			term = divide(term, b);
+			
+
+			if(!isNegative) {
+				if(n % 2 == 0) {
+					term.isNegative = true;
+					
+				}else {
+					term.isNegative = false;
+				}
+			}else {
+				term.isNegative = true;
+			}
+			HPN dterm = divide(term, counter);
+	
+			sum = add(sum, dterm);
+			sequence += dterm + ", ";
+			sums += sum + ", ";
+
+			System.out.println("dterm: " + term);
+			counter ++;
+			n ++;
+			
+		}
+		System.out.println("---------------");
+		System.out.println("Sequence: " + sequence);
+		System.out.println("Partial Sums: " + sums);
+		
+		if(isNegative) {
+			sum.isNegative = true;
 		}
 		
 		return sum;	
@@ -1321,11 +1395,13 @@ public class HPN {
 	}
 
 	private static boolean isZero(HPN term) {
-		if (term.intPart != 0) {
+		HPN abs = copy(term);
+		abs.isNegative = false;
+		if (abs.intPart != 0) {
 			return false;
 		}
-		for (int i = 0; i < term.fracPart.length; i++) {
-			if (term.fracPart[i] != 0) {
+		for (int i = 0; i < abs.fracPart.length; i++) {
+			if (abs.fracPart[i] != 0) {
 				return false;
 			}
 		}
