@@ -8,9 +8,14 @@ public class HPN_Test {
 		HPN x = new HPN("0.5", true);
 		HPN y = new HPN("-0.5", false);
 		
-		HPN result = HPN.geometricSum(1,2);
-		HPN.termAt(3);
-		System.out.println("---------------");
+		long begin = System.currentTimeMillis();
+		HPN.geometricSum(1,2);
+		long end = System.currentTimeMillis();
+		long time = end - begin;
+		System.out.println("Elapsed Time: " + time + " ms");
+		
+		//System.out.println(HPN.add(x,y));
+		//System.out.println("---------------");
 		//System.out.println(Objects.toString(x));
 		//System.out.println(HPN.printAns(result));
 		

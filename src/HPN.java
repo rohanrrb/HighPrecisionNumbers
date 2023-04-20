@@ -10,11 +10,9 @@ import java.util.*;
  * 
  * @author Rohan Bopardikar under Dr. Christopher Heckman
  * 
- *         Condense exact to one symbol Sequence & Sum Arrays? Yes Calendar to
- *         track time
+ *         ToDo
  * 
- *         Questions: Need to show exact or not for calculations? Keep
- *         calculations in final?
+ *         Rewrite the toString it is so annoying
  * 
  */
 public class HPN {
@@ -43,14 +41,14 @@ public class HPN {
 
 		if (isNegative) {
 			if (isTruncated) {
-				return "-" + intPart + "." + fracNum /* + "(" + exact +")" + "("+this.fracPart.length+")*" */;
+				return "-" + intPart + "." + fracNum /* */;
 			}
-			return "-" + intPart + "." + fracNum /* + "(" + exact +")" + "("+this.fracPart.length+")" */;
+			return "-" + intPart + "." + fracNum /* + "(" + exact +")" */;
 		} else {
 			if (isTruncated) {
-				return intPart + "." + fracNum /* + "(" + exact +")" + "("+this.fracPart.length+")*" */;
+				return intPart + "." + fracNum /* + "(" + exact +")" */;
 			}
-			return intPart + "." + fracNum /* + "(" + exact +")" + "("+this.fracPart.length+")" */;
+			return intPart + "." + fracNum /* + "(" + exact +")" */;
 		}
 	}
 
@@ -947,10 +945,9 @@ public class HPN {
 	 * @return sum
 	 */
 	public static HPN geometricSum(int a, int b) {
+
 		sequence.clear();
 		sums.clear();
-//		String sequence = "";
-//		String sums = "";
 
 		// check for convergence
 		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
@@ -979,6 +976,7 @@ public class HPN {
 			term = divide(term, b);
 
 		}
+
 		// Calculation Display
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
@@ -998,6 +996,7 @@ public class HPN {
 	 *
 	 */
 	public static HPN geometricSum(int first, int a, int b) {
+
 		sequence.clear();
 		sums.clear();
 
@@ -1028,14 +1027,13 @@ public class HPN {
 
 		}
 
+
 		// Calculation Display
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
 		System.out.println();
-		System.out
-				.println("The geometric sum for (" + first + ")(" + a + "/" + b + ")^n " + sum.equalSign() + " " + sum);
-
+		System.out.println("The geometric sum for (" + first + ")(" + a + "/" + b + ")^n " + sum.equalSign() + " " + sum);
 		return sum;
 	}
 
@@ -1055,7 +1053,10 @@ public class HPN {
 	public static HPN eToX(int x) {
 		// No convergence check, RC = inf
 		// Edge cases
+		
+
 		if (x == 0) {
+			
 			return one();
 		}
 
@@ -1080,9 +1081,14 @@ public class HPN {
 			}
 			n++;
 		}
+		
+		
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
+		System.out.println();
+		System.out.println("The sum approximation for e^" + x + sum.equalSign() + " " + sum);
+
 		return sum;
 	}
 
@@ -1175,8 +1181,6 @@ public class HPN {
 			return null;
 		}
 
-		
-
 		HPN term = divide(new HPN(a), b);
 		HPN sum = term;
 
@@ -1247,12 +1251,10 @@ public class HPN {
 			return null;
 		}
 
-		
-
 		HPN term = divide(new HPN(a), b);
 		HPN sum = copy(term);
 
-		sequence.add( term );
+		sequence.add(term);
 
 		int n = 0;
 		int counter = 2;
@@ -1300,7 +1302,7 @@ public class HPN {
 	 */
 	public static HPN ln2b() {
 		// init
-		
+
 		HPN sum = zero();
 		HPN term = one();
 		int n = 1;
@@ -1359,7 +1361,7 @@ public class HPN {
 	 * @return
 	 */
 	public static HPN recipFibo() {
-	
+
 		HPN sum = zero();
 		HPN term = one();
 		int denom = 0;
@@ -1413,7 +1415,7 @@ public class HPN {
 	}
 
 	public static HPN termAt(int a) {
-		if (a < 1 || sequence == null) {
+		if (a == 0 || a < sequence.size()) {
 			return null;
 		}
 		System.out.println();
@@ -1422,7 +1424,7 @@ public class HPN {
 	}
 
 	public static HPN sumAt(int a) {
-		if (a < 1 || sums == null) {
+		if (a == 0 || a < sums.size()) {
 			return null;
 		}
 		System.out.println();
