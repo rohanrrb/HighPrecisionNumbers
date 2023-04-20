@@ -1219,8 +1219,9 @@ public class HPN {
 		return sum;	
 	}
 	
-	//ln(1+x)
-	public static HPN ln1x(int a, int b) {
+	//x = a/b
+	//log(x) = ln(1+x)
+	public static HPN log(int a, int b) {
 
 		// Edge cases
 		if (a == 0) {
@@ -1295,7 +1296,7 @@ public class HPN {
 	 * 
 	 * @return
 	 */
-	public static HPN ln2() {
+	public static HPN ln2b() {
 		// init
 		String sequence = "";
 		String sums = "";
@@ -1329,6 +1330,28 @@ public class HPN {
 		System.out.println("Partial Sums: " + sums);
 		System.out.println(n + " terms");
 		return sum;
+	}
+	
+	//These ln functions are inspired by machin like formulas
+	
+	//Powers of 2 & 3
+	public static HPN ln2() {
+		return subtract (multiply (log (-5,32), -2), multiply (log (-1, 9), 3));
+	}
+	
+	//Powers of 2 & 3
+	public static HPN ln3() {
+		return subtract (multiply (log (-5,32), -3), multiply (log (-1, 9), 5));
+	}
+	
+	//Powers of 3 & 5
+		public static HPN ln3b() {
+			return subtract (multiply (log (-938,3125), -2), multiply (log (-2, 27), 5));
+		}
+	
+	//Powers of 3 & 5
+	public static HPN ln5() {
+		return subtract (multiply (log (-938,3125), -3), multiply (log (-2, 27), 7));
 	}
 
 	/**
