@@ -8,11 +8,11 @@ public class HPN_Test {
 		HPN x = new HPN("0.5", true);
 		HPN y = new HPN("-0.5", false);
 		
-		HPN result = HPN.ln5();
-		
+		HPN result = HPN.geometricSum(1,2);
+		HPN.termAt(3);
 		System.out.println("---------------");
 		//System.out.println(Objects.toString(x));
-		System.out.println(HPN.printAns(result));
+		//System.out.println(HPN.printAns(result));
 		
 		
 	}

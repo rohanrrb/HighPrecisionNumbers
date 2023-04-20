@@ -24,6 +24,7 @@ public class HPN {
 	private boolean isNegative;
 	private boolean isTruncated; // needed? No
 	private boolean isExact;
+	final static char approx = '≈';
 
 	@Override
 	public String toString() {
@@ -54,17 +55,10 @@ public class HPN {
 	}
 
 	public static String printAns(HPN a) {
-		if(a == null) {
+		if (a == null) {
 			return ("Something went wrong... Dividing by zero? Please try again");
 		}
-		String output = "";
-		char approx = '≈';
-		if (a.isExact) {
-			output = "=" + " " + a.toString();
-		} else {
-			output = approx + " " + a.toString();
-		}
-
+		String output = a.equalSign() + " " + a.toString();
 		return output;
 	}
 
@@ -533,30 +527,29 @@ public class HPN {
 //		return quotient;
 //	}
 
-	
 	public static HPN divide(HPN a, int b) {
 		System.out.println(a.toString() + " / " + b);
 		boolean exact = true;
 
-		if(isZero(a)) {
+		if (isZero(a)) {
 			return zero();
 		}
 
-		if(b == 0 ) {
+		if (b == 0) {
 			return null;
 		}
 
-		//Check Negativity
-		if(a.isNegative && b < 0) {
+		// Check Negativity
+		if (a.isNegative && b < 0) {
 			a.isNegative = false;
-			b *= -1; 
+			b *= -1;
 
-			return divide(a,b);
+			return divide(a, b);
 		}
 
-		if(!a.isNegative && b < 0) {
+		if (!a.isNegative && b < 0) {
 			b *= -1;
-			HPN result = divide(a,b);
+			HPN result = divide(a, b);
 			result.isNegative = true;
 			return result;
 		}
@@ -567,72 +560,70 @@ public class HPN {
 //			return result;
 //		}
 
-		//Initialize
-		int whole = 0; 
+		// Initialize
+		int whole = 0;
 		int intQuotient;
 
-		int dividend; 
-		intQuotient = a.intPart/b;
-		int intRemainder = a.intPart % b; 
+		int dividend;
+		intQuotient = a.intPart / b;
+		int intRemainder = a.intPart % b;
 
 		if (intQuotient != 0) {
 
-			whole = intQuotient*b; 
-			a.intPart -= whole; 
+			whole = intQuotient * b;
+			a.intPart -= whole;
 			HPN quotient = divide(a, b);
-			quotient.intPart += intQuotient; 
-			
+			quotient.intPart += intQuotient;
 
-			return quotient; 
+			return quotient;
 		}
 
-		HPN remainder = new HPN(intRemainder, a.fracPart); 
-		int[] rFrac = remainder.fracPart; 
-		int[] qFrac = new int[rFrac.length]; 
+		HPN remainder = new HPN(intRemainder, a.fracPart);
+		int[] rFrac = remainder.fracPart;
+		int[] qFrac = new int[rFrac.length];
 		HPN quotient = new HPN(0, qFrac);
 
-			dividend = concat(remainder.intPart, rFrac[0]);
-			int miniQ = dividend/b;
-			qFrac[0] = miniQ; 
-			int product = miniQ * b; 
+		dividend = concat(remainder.intPart, rFrac[0]);
+		int miniQ = dividend / b;
+		qFrac[0] = miniQ;
+		int product = miniQ * b;
+		dividend = dividend - product;
+
+		int i = 1;
+
+		// Repeat until division is complete
+		while ((dividend != 0 || i != rFrac.length) && i < 10) {
+			if (i > rFrac.length - 1) {
+				rFrac = expand(rFrac);
+			}
+			dividend = concat(dividend, rFrac[i]);
+
+			miniQ = dividend / b;
+
+			if (i > qFrac.length - 1) {
+				qFrac = expand(qFrac);
+			}
+			qFrac[i] = miniQ;
+
+			product = miniQ * b;
 			dividend = dividend - product;
 
-			int i = 1;
-
-			//Repeat until division is complete
-			while((dividend != 0 || i != rFrac.length) && i < 10) {
-				if(i > rFrac.length -1){
-					rFrac = expand(rFrac);
-				}
-				dividend = concat(dividend, rFrac[i]);
-
-				miniQ = dividend/b;
-
-				if(i > qFrac.length -1) {
-					qFrac = expand(qFrac);
-				}
-				qFrac[i] = miniQ;
-
-
-				product = miniQ *b;
-				dividend = dividend - product; 
-
-				//If the quotient exceeds max decimal value, stop and make not exact
-				if(i == 9) {
-					exact = false;
-				}
-				i++;
+			// If the quotient exceeds max decimal value, stop and make not exact
+			if (i == 9) {
+				exact = false;
 			}
-			quotient.fracPart = qFrac;
+			i++;
+		}
+		quotient.fracPart = qFrac;
 
 		quotient.isExact = exact;
-		if(a.isNegative && b > 0) {
+		if (a.isNegative && b > 0) {
 			quotient.isNegative = true;
 		}
 
 		return quotient;
 	}
-	
+
 	public static int concat(int a, int b) {
 		String s1 = Integer.toString(a);
 		String s2 = Integer.toString(b);
@@ -749,7 +740,6 @@ public class HPN {
 
 		// copy fracPart
 		int bFrac[] = new int[a.fracPart.length];
-		System.out.println("a length: " + a.fracPart.length);
 		System.arraycopy(a.fracPart, 0, bFrac, 0, bFrac.length);
 		b.fracPart = bFrac;
 
@@ -946,6 +936,9 @@ public class HPN {
 		return this.fracPart.length;
 	}
 
+	public static ArrayList<HPN> sequence = new ArrayList<HPN>();
+	public static ArrayList<HPN> sums = new ArrayList<HPN>();
+
 	/**
 	 * [1,inf)SUM (a * r^n) = 1 + (a/b) + (a/b)^2 + ... a is 1
 	 * 
@@ -954,8 +947,10 @@ public class HPN {
 	 * @return sum
 	 */
 	public static HPN geometricSum(int a, int b) {
-		String sequence = "";
-		String sums = "";
+		sequence.clear();
+		sums.clear();
+//		String sequence = "";
+//		String sums = "";
 
 		// check for convergence
 		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
@@ -969,8 +964,10 @@ public class HPN {
 
 		while (!isZero(term)) {
 			// Update strings
-			sequence += term + ", ";
-			sums += sum + ", ";
+			// sequence += term + ", ";
+			sequence.add(term);
+			// sums += sum + ", ";
+			sums.add(sum);
 
 			// Separating term calculations
 			System.out.println("---");
@@ -986,6 +983,8 @@ public class HPN {
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
+		System.out.println();
+		System.out.println("The geometric sum for (" + a + "/" + b + ")^n " + sum.equalSign() + " " + sum);
 
 		return sum;
 	}
@@ -995,16 +994,16 @@ public class HPN {
 	 * 
 	 * @param a
 	 * @param b
-	 * @return sum Will be more accurate if I call origican geoSum and multiply m?
+	 * @return sum
 	 *
 	 */
 	public static HPN geometricSum(int first, int a, int b) {
-		String sequence = "";
-		String sums = "";
+		sequence.clear();
+		sums.clear();
 
 		// check for convergence
 		if ((Math.abs(a) > Math.abs(b) && b >= 0) || a == b) {
-			System.out.println("DIVERGES");
+			System.out.println("Series Diverges");
 			return null;
 		} else {
 			System.out.println("CONVERGES");
@@ -1014,8 +1013,9 @@ public class HPN {
 
 		while (!isZero(term)) {
 			// Update strings
-			sequence += term + ", ";
-			sums += sum + ", ";
+			sequence.add(term);
+			// sums += sum + ", ";
+			sums.add(sum);
 
 			// Separating term calculations
 			System.out.println("---");
@@ -1027,10 +1027,14 @@ public class HPN {
 			term = divide(term, b);
 
 		}
+
 		// Calculation Display
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
+		System.out.println();
+		System.out
+				.println("The geometric sum for (" + first + ")(" + a + "/" + b + ")^n " + sum.equalSign() + " " + sum);
 
 		return sum;
 	}
@@ -1056,22 +1060,22 @@ public class HPN {
 		}
 
 		// init
-		String sequence = "";
-		String sums = "";
+		sequence.clear();
+		sums.clear();
 		HPN sum = zero();
 		HPN term = one();
 
 		int n = 0;
 
 		while (!isZero(term)) {
-			sequence += term + ", ";
-			System.out.println(Objects.toString("sum: " + sum));
-			sums += sum + ", ";
+			sequence.add(term);
+			// sums += sum + ", ";
+			sums.add(sum);
 			System.out.println("---");
 			sum = add(sum, term);
 
 			term = multiply(term, x);
-			if (!Objects.equals(one(),sum)) { // make equals(), this compares same object
+			if (!Objects.equals(one(), sum)) { // make equals(), this compares same object
 				term = divide(term, n + 1);
 			}
 			n++;
@@ -1093,22 +1097,22 @@ public class HPN {
 		}
 
 		// init
-		String sequence = "";
-		String sums = "";
+		sequence.clear();
+		sums.clear();
 		HPN sum = zero();
 		HPN term = one();
 
 		int n = 0;
 
 		while (!isZero(term)) {
-			sequence += term + ", ";
-			System.out.println(Objects.toString("sum: " + sum));
-			sums += sum + ", ";
+			sequence.add(term);
+			// sums += sum + ", ";
+			sums.add(sum);
 			System.out.println("---");
 			sum = add(sum, term);
 			term = multiply(term, a);
 			term = divide(term, b);
-			if (!Objects.equals(one(),sum)) { // make equals(), this compares same object
+			if (!Objects.equals(one(), sum)) { // make equals(), this compares same object
 				term = divide(term, n + 1);
 			}
 			n++;
@@ -1118,29 +1122,31 @@ public class HPN {
 		System.out.println("Partial Sums: " + sums);
 		return sum;
 	}
-	
+
 	/**
 	 * Uses Euler's Machin-Like Formula
+	 * 
 	 * @return
 	 */
 	public static HPN pi1() {
-		HPN pi = add(arctan(1,2), arctan(1,3)); //should be pi/4
-		pi = multiply(pi,4);
+		HPN pi = add(arctan(1, 2), arctan(1, 3)); // should be pi/4
+		pi = multiply(pi, 4);
 		return pi;
 	}
-	
+
 	/**
 	 * Uses Hermann's Machin-Like Formula
+	 * 
 	 * @return
 	 */
 	public static HPN pi2() {
-		HPN pi = multiply(arctan(1,2),2);
-		pi = subtract(pi, arctan(1,7)); //should be pi/4
-		pi = multiply(pi,4);
-		
+		HPN pi = multiply(arctan(1, 2), 2);
+		pi = subtract(pi, arctan(1, 7)); // should be pi/4
+		pi = multiply(pi, 4);
+
 		return pi;
 	}
-	
+
 	/**
 	 * Calculated maclaurin sum for arctan(x)
 	 * 
@@ -1148,147 +1154,143 @@ public class HPN {
 	 * @param b
 	 * @return
 	 */
-	public static HPN arctan(int a,int b) {
-		
+	public static HPN arctan(int a, int b) {
+
 		// Edge cases
 		if (a == 0) {
 			return zero();
 		}
-		if ( b == 0) {
+		if (b == 0) {
 			return null;
 		}
-		
+
 		boolean isNegative = false;
-		if(b*a < 0) {
+		if (b * a < 0) {
 			isNegative = true;
 		}
-		
-		//check for convergence, RC = 1
-		double ratio = a/b;
+
+		// check for convergence, RC = 1
+		double ratio = a / b;
 		if (ratio > 1 || ratio < -1) {
 			return null;
 		}
+
 		
-		String sequence = "";
-		String sums = "";
-		
-		HPN term = divide(new HPN(a),b);
+
+		HPN term = divide(new HPN(a), b);
 		HPN sum = term;
-		
-		sequence += term + ", ";
+
+		sequence.add(term);
 		HPN squared = multiply(term, a);
 		squared = divide(squared, b);
-		
+
 		int n = 0;
 		int counter = 3;
 
-		//stop when term gets very small
-		while(!Objects.equals(term, zero())) {
+		// stop when term gets very small
+		while (!Objects.equals(term, zero())) {
 
 			term = multiply(term, a);
 			term = multiply(term, a);
 			term = divide(term, b);
 			term = divide(term, b);
-			
-			if(n % 2 == 0) {
+
+			if (n % 2 == 0) {
 				negate(term);
 				System.out.println("negated");
-			}	
-			
+			}
+
 			HPN dterm = divide(term, counter);
 			sum = add(sum, dterm);
-			
-			sequence += dterm + ", ";
-			sums += sum + ", ";
 
-			n ++;
+			sequence.add(dterm);
+			sums.add(sum);
+
+			n++;
 			counter += 2;
-			
-			if(n > 10) {
+
+			if (n > 10) {
 				break;
 			}
 		}
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
-		
-		if(isNegative) {
+
+		if (isNegative) {
 			negate(sum);
 		}
-		
-		return sum;	
+
+		return sum;
 	}
-	
-	//x = a/b
-	//log(x) = ln(1+x)
+
+	// x = a/b
+	// log(x) = ln(1+x)
 	public static HPN log(int a, int b) {
 
 		// Edge cases
 		if (a == 0) {
 			return zero();
 		}
-		if ( b == 0) {
+		if (b == 0) {
 			return null;
 		}
-		
+
 		boolean isNegative = false;
-		if(b*a < 0) {
+		if (b * a < 0) {
 			isNegative = true;
 		}
-		
-		//check for convergence, RC = 1
-		double ratio = a/b;
+
+		// check for convergence, RC = 1
+		double ratio = a / b;
 		if (ratio > 1 || ratio < -1) {
 			return null;
 		}
+
 		
-		String sequence = "";
-		String sums = "";
-		
-		HPN term = divide(new HPN(a),b);
+
+		HPN term = divide(new HPN(a), b);
 		HPN sum = copy(term);
-		
-		sequence += term + ", ";
-		
+
+		sequence.add( term );
+
 		int n = 0;
 		int counter = 2;
-		//stop when term gets very small
-		while(!isZero(term)) {
-		
+		// stop when term gets very small
+		while (!isZero(term)) {
+
 			term = multiply(term, a);
 			term = divide(term, b);
-			
 
-			if(!isNegative) {
-				if(n % 2 == 0) {
+			if (!isNegative) {
+				if (n % 2 == 0) {
 					term.isNegative = true;
-					
-				}else {
+
+				} else {
 					term.isNegative = false;
 				}
-			}else {
+			} else {
 				term.isNegative = true;
 			}
 			HPN dterm = divide(term, counter);
-	
-			sum = add(sum, dterm);
-			sequence += dterm + ", ";
-			sums += sum + ", ";
 
-			System.out.println("dterm: " + term);
-			counter ++;
-			n ++;
-			
+			sum = add(sum, dterm);
+			sequence.add(dterm);
+			sums.add(sum);
+
+			counter++;
+			n++;
+
 		}
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
-		
-		if(isNegative) {
+
+		if (isNegative) {
 			sum.isNegative = true;
 		}
-		
-		return sum;	
+
+		return sum;
 	}
 
 	/**
@@ -1298,22 +1300,19 @@ public class HPN {
 	 */
 	public static HPN ln2b() {
 		// init
-		String sequence = "";
-		String sums = "";
+		
 		HPN sum = zero();
 		HPN term = one();
 		int n = 1;
 
 		while (!isZero(term)) {
 
-			sequence += term + ", ";
-			System.out.println(Objects.toString("sum: " + sum));
-			sums += sum + ", ";
+			sequence.add(term);
+			// sums += sum + ", ";
+			sums.add(sum);
 			System.out.println("---");
-			System.out.println("ADDING " + term + " to " + sum);
 			sum = add(sum, term);
 			term = one();
-			System.out.println("quo");
 			term = divide(term, n + 1);
 			if (n % 2 != 0) {
 				negate(term);
@@ -1331,27 +1330,27 @@ public class HPN {
 		System.out.println(n + " terms");
 		return sum;
 	}
-	
-	//These ln functions are inspired by machin like formulas
-	
-	//Powers of 2 & 3
+
+	// These ln functions are inspired by machin like formulas
+
+	// Powers of 2 & 3
 	public static HPN ln2() {
-		return subtract (multiply (log (-5,32), -2), multiply (log (-1, 9), 3));
+		return subtract(multiply(log(-5, 32), -2), multiply(log(-1, 9), 3));
 	}
-	
-	//Powers of 2 & 3
+
+	// Powers of 2 & 3
 	public static HPN ln3() {
-		return subtract (multiply (log (-5,32), -3), multiply (log (-1, 9), 5));
+		return subtract(multiply(log(-5, 32), -3), multiply(log(-1, 9), 5));
 	}
-	
-	//Powers of 3 & 5
-		public static HPN ln3b() {
-			return subtract (multiply (log (-938,3125), -2), multiply (log (-2, 27), 5));
-		}
-	
-	//Powers of 3 & 5
+
+	// Powers of 3 & 5
+	public static HPN ln3b() {
+		return subtract(multiply(log(-938, 3125), -2), multiply(log(-2, 27), 5));
+	}
+
+	// Powers of 3 & 5
 	public static HPN ln5() {
-		return subtract (multiply (log (-938,3125), -3), multiply (log (-2, 27), 7));
+		return subtract(multiply(log(-938, 3125), -3), multiply(log(-2, 27), 7));
 	}
 
 	/**
@@ -1360,8 +1359,7 @@ public class HPN {
 	 * @return
 	 */
 	public static HPN recipFibo() {
-		String sequence = "";
-		String sums = "";
+	
 		HPN sum = zero();
 		HPN term = one();
 		int denom = 0;
@@ -1370,11 +1368,11 @@ public class HPN {
 		int a = 1;
 		int b = 1;
 
-		sequence += one();
+		sequence.add(one());
 		while (!isZero(term)) {
-			sequence += term + ", ";
-			System.out.println(Objects.toString("sum: " + sum));
-			sums += sum + ", ";
+			sequence.add(term);
+			// sums += sum + ", ";
+			sums.add(sum);
 			sum = add(sum, term);
 			System.out.println("---");
 
@@ -1401,6 +1399,35 @@ public class HPN {
 		System.out.println("Partial Sums: " + sums);
 		System.out.println(n + " terms");
 		return add(sum, 1);
+	}
+
+	public char equalSign() {
+		char equalSign;
+		if (this.isExact) {
+			equalSign = '=';
+		} else {
+			equalSign = approx;
+		}
+
+		return equalSign;
+	}
+
+	public static HPN termAt(int a) {
+		if (a < 1 || sequence == null) {
+			return null;
+		}
+		System.out.println();
+		System.out.println("The number " + a + " term is: " + sequence.get(a - 1));
+		return sequence.get(a - 1);
+	}
+
+	public static HPN sumAt(int a) {
+		if (a < 1 || sums == null) {
+			return null;
+		}
+		System.out.println();
+		System.out.println("The number " + a + " term is: " + sums.get(a - 1));
+		return sums.get(a - 1);
 	}
 
 	public static int factorial(int a) {
