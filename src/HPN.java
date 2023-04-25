@@ -10,9 +10,11 @@ import java.util.*;
  * 
  * @author Rohan Bopardikar under Dr. Christopher Heckman
  * 
- *         ToDo
- * 
+ *ToDo
  *         Rewrite the toString it is so annoying
+ *         Something broke arctan
+ *         
+ *         java stream
  * 
  */
 public class HPN {
@@ -235,7 +237,13 @@ public class HPN {
 	public static HPN add(HPN a, int b) {
 		return add(a, new HPN(b));
 	}
-
+	
+	/**
+	 * 
+	 * @param a = integer value
+	 * @param 
+	 * @return
+	 */
 	public static HPN add(int a, HPN b) {
 		return add(b, a);
 	}
@@ -981,7 +989,7 @@ public class HPN {
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
-		System.out.println();
+		System.out.println("---------------");
 		System.out.println("The geometric sum for (" + a + "/" + b + ")^n " + sum.equalSign() + " " + sum);
 
 		return sum;
@@ -1032,7 +1040,7 @@ public class HPN {
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
-		System.out.println();
+		System.out.println("---------------");
 		System.out.println("The geometric sum for (" + first + ")(" + a + "/" + b + ")^n " + sum.equalSign() + " " + sum);
 		return sum;
 	}
@@ -1053,8 +1061,6 @@ public class HPN {
 	public static HPN eToX(int x) {
 		// No convergence check, RC = inf
 		// Edge cases
-		
-
 		if (x == 0) {
 			
 			return one();
@@ -1086,7 +1092,7 @@ public class HPN {
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
-		System.out.println();
+		System.out.println("---------------");
 		System.out.println("The sum approximation for e^" + x + sum.equalSign() + " " + sum);
 
 		return sum;
@@ -1126,6 +1132,8 @@ public class HPN {
 		System.out.println("---------------");
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
+		System.out.println("---------------");
+		System.out.println("The infinite sum approximation for e^(" +a  +"/"+b+") " + sum.equalSign() + " " + sum);
 		return sum;
 	}
 
@@ -1134,9 +1142,12 @@ public class HPN {
 	 * 
 	 * @return
 	 */
-	public static HPN pi1() {
+	public static HPN pi() {
 		HPN pi = add(arctan(1, 2), arctan(1, 3)); // should be pi/4
 		pi = multiply(pi, 4);
+		System.out.println("---------------");
+		System.out.println("The infinite sum approximation for "+  pi.equalSign() + pi);
+
 		return pi;
 	}
 
@@ -1149,6 +1160,9 @@ public class HPN {
 		HPN pi = multiply(arctan(1, 2), 2);
 		pi = subtract(pi, arctan(1, 7)); // should be pi/4
 		pi = multiply(pi, 4);
+		System.out.println("---------------");
+		System.out.println("The infinite sum approximation for "+  pi.equalSign() + pi);
+
 
 		return pi;
 	}
@@ -1182,13 +1196,17 @@ public class HPN {
 		}
 
 		HPN term = divide(new HPN(a), b);
-		HPN sum = term;
-
+		System.out.println(term);
+		HPN sum = copy(term);
+		System.out.println(sum);
 		sequence.add(term);
+		sums.add( sum);
+
+		//sequence.add(term);
 		HPN squared = multiply(term, a);
 		squared = divide(squared, b);
 
-		int n = 0;
+		int n = 1;
 		int counter = 3;
 
 		// stop when term gets very small
@@ -1199,12 +1217,23 @@ public class HPN {
 			term = divide(term, b);
 			term = divide(term, b);
 
-			if (n % 2 == 0) {
-				negate(term);
-				System.out.println("negated");
-			}
+			
 
 			HPN dterm = divide(term, counter);
+			if(isNegative) {
+				if (n % 2 == 0) {
+					dterm.isNegative =  true;
+				}else {
+					dterm.isNegative = false;
+				}
+			}else {
+				if (n % 2 == 0) {
+					dterm.isNegative = false;
+				}else {
+					dterm.isNegative = true;
+				}
+			}
+			
 			sum = add(sum, dterm);
 
 			sequence.add(dterm);
@@ -1221,9 +1250,12 @@ public class HPN {
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
 
-		if (isNegative) {
-			negate(sum);
-		}
+//		if (isNegative) {
+//			negate(sum);
+//		}
+		System.out.println();
+		System.out.println("The infinite sum approximation for arctan(" +a  +"/"+b+") " + sum.equalSign() + " " + sum);
+		System.out.println(isNegative);
 
 		return sum;
 	}
@@ -1291,6 +1323,11 @@ public class HPN {
 		if (isNegative) {
 			sum.isNegative = true;
 		}
+		
+		System.out.println();
+		System.out.println("The infinite sum approximation for log(" +a  +"/"+b+") " + sum.equalSign() + " " + sum);
+
+
 
 		return sum;
 	}
@@ -1330,29 +1367,51 @@ public class HPN {
 		System.out.println("Sequence: " + sequence);
 		System.out.println("Partial Sums: " + sums);
 		System.out.println(n + " terms");
+		System.out.println();
+		System.out.println("The infinite sum approximation for ln(2) using a basic maclaurin series " + sum.equalSign() + " " + sum);
 		return sum;
 	}
 
-	// These ln functions are inspired by machin like formulas
+	// These ln functions are inspired by machin-like formulas
 
 	// Powers of 2 & 3
 	public static HPN ln2() {
-		return subtract(multiply(log(-5, 32), -2), multiply(log(-1, 9), 3));
+		HPN result = subtract(multiply(log(-5, 32), -2), multiply(log(-1, 9), 3));
+		System.out.println();
+		System.out.println("---------------");
+		System.out.println("Using 2 & 3 powers");
+		System.out.println("The infinite sum approximation for ln(2) using a machin-like formula " + result.equalSign() + " " + result);
+		return result;
 	}
 
 	// Powers of 2 & 3
 	public static HPN ln3() {
-		return subtract(multiply(log(-5, 32), -3), multiply(log(-1, 9), 5));
+		HPN result = subtract(multiply(log(-5, 32), -3), multiply(log(-1, 9), 5));
+		System.out.println();
+		System.out.println("---------------");
+		System.out.println("Using 2 & 3 powers");
+		System.out.println("The infinite sum approximation for ln(3) using a machin-like formula " + result.equalSign() + " " + result);
+		return result;
 	}
 
 	// Powers of 3 & 5
 	public static HPN ln3b() {
-		return subtract(multiply(log(-938, 3125), -2), multiply(log(-2, 27), 5));
+		HPN result = subtract(multiply(log(-938, 3125), -2), multiply(log(-2, 27), 5));
+		System.out.println();
+		System.out.println("---------------");
+		System.out.println("Using 3 & 5 powers");
+		System.out.println("The infinite sum approximation for ln(3) using a machin-like formula " + result.equalSign() + " " + result);
+		return result;
 	}
 
 	// Powers of 3 & 5
 	public static HPN ln5() {
-		return subtract(multiply(log(-938, 3125), -3), multiply(log(-2, 27), 7));
+		HPN result = subtract(multiply(log(-938, 3125), -3), multiply(log(-2, 27), 7));
+		System.out.println();
+		System.out.println("---------------");
+		System.out.println("Using 3 & 5 powers");
+		System.out.println("The infinite sum approximation for ln(5) using a machin-like formula " + result.equalSign() + " " + result);
+		return result;
 	}
 
 	/**
